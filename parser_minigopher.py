@@ -30,8 +30,10 @@ def parse_declaration_list():
     """
     Функція для розбору списку декларацій {Declaration}
     """
+    print(next_indt() + 'parse_declaration_list():')
     while parse_declaration():
         pass
+    pred_indt()
 
 
 def parse_declaration():
@@ -40,7 +42,6 @@ def parse_declaration():
     Declaration = VariableDecl | ShortVariableDecl | ConstDecl
     """
     num_line, lexeme, token = get_symbol()
-    print(num_line, lexeme, token)
     if lexeme == 'var':
         parse_variable_decl()
     elif lexeme == 'const':
@@ -57,6 +58,7 @@ def parse_variable_decl():
     Функція для розбору декларації змінної:
     VariableDecl = 'var' Identifier TypeSpec [ '=' Expression ] ';'
     """
+    print(next_indt() + 'parse_variable_decl():')
     parse_token('var', 'keyword')
     parse_identifier()
     parse_type_spec()
@@ -64,6 +66,7 @@ def parse_variable_decl():
         parse_token('=', 'assign_op')
         parse_expression()
     parse_token(';', 'punct')
+    pred_indt()
 
 
 def parse_short_variable_decl():
@@ -71,10 +74,12 @@ def parse_short_variable_decl():
     Функція для розбору короткої декларації:
     ShortVariableDecl = Identifier ':=' Expression ';'
     """
+    print(next_indt() + 'parse_short_variable_decl():')
     parse_identifier()
     parse_token(':=', 'short_assign_op')
     parse_expression()
     parse_token(';', 'punct')
+    pred_indt()
 
 
 def parse_const_decl():
@@ -82,12 +87,14 @@ def parse_const_decl():
     Функція для розбору декларації константи:
     ConstDecl = 'const' Identifier TypeSpec '=' Expression ';'
     """
+    print(next_indt() + 'parse_const_decl():')
     parse_token('const', 'keyword')
     parse_identifier()
     parse_type_spec()
     parse_token('=', 'assign_op')
     parse_expression()
     parse_token(';', 'punct')
+    pred_indt()
 
 
 def parse_type_spec():
@@ -108,6 +115,8 @@ def parse_main_section():
     Функція для розбору основної секції main:
     MainSection = 'func' 'main' '(' ')' '{' Statement { Statement | Declaration } '}'
     """
+    print(next_indt() + 'parse_main_section():')
+
     parse_token('func', 'keyword')
     parse_token('main', 'keyword')
     parse_token('(', 'brackets_op')
@@ -117,6 +126,8 @@ def parse_main_section():
         pass
     parse_token('}', 'block_op')
 
+    pred_indt()
+
 
 def parse_statement():
     """
@@ -124,8 +135,6 @@ def parse_statement():
     Підтримує всі типи інструкцій згідно з граматикою.
     """
     num_line, lexeme, tok = get_symbol()
-
-    print(num_line, lexeme, tok)
     if tok == 'id' and check_next_token('='):
         parse_assign()
         res = True
@@ -295,40 +304,59 @@ def parse_identifier_list():
 
 
 def parse_expression():
+    indent = next_indt()
+    print(indent + 'parse_expression():')
+
     parse_term()
     while True:
         num_line, lexeme, tok = get_symbol()
         if tok in 'add_op':
+            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
             global num_row
             num_row += 1
             parse_term()
         else:
             break
 
+    pred_indt()
+
 
 def parse_term():
+    indent = next_indt()
+    print(indent + 'parse_term():')
+
     parse_factor()
     while True:
         num_line, lexeme, tok = get_symbol()
         if tok in 'mult_op':
+            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
             global num_row
             num_row += 1
             parse_factor()
         else:
             break
 
+    pred_indt()
+
 
 def parse_factor():
+    indent = next_indt()
+    print(indent + 'parse_factor():')
+
     num_line, lexeme, token = get_symbol()
     global num_row
     if token in ('intnum', 'floatnum', 'id', 'boolval'):
+        print(indent + f"в рядку {num_line} - токен ({lexeme}, {token})")
         num_row += 1
     elif lexeme == '(':
+        print(indent + f"в рядку {num_line} - токен ({lexeme}, 'brackets_op')")
         num_row += 1
         parse_expression()
         parse_token(')', 'brackets_op')
     else:
         fail_parse('невідповідність у Expression.Factor', (num_line, lexeme, token))
+
+    pred_indt()
 
 
 def parse_token(expected_lexeme, expected_token):
@@ -341,7 +369,6 @@ def parse_token(expected_lexeme, expected_token):
     num_line, lexeme, token = get_symbol()
     num_row += 1
 
-    print(lexeme, token, expected_lexeme, expected_token)
     if (lexeme, token) == (expected_lexeme, expected_token):
         print(indent + 'parseToken: В рядку {0} токен {1}'.format(num_line, (expected_lexeme, expected_token)))
         res = True
@@ -365,7 +392,7 @@ def parse_identifier():
     num_row += 1
 
     if token == 'id':
-        print(indent + 'parseIdentifier: В рядку {0} знайдено ідентифікатор {1}'.format(num_line, lexeme))
+        print(indent + 'parseIdentifier: В рядку {0} ідентифікатор {1}'.format(num_line, lexeme))
     else:
         fail_parse('невідповідність токенів', (num_line, lexeme, token, '<ідентифікатор>', 'id'))
 
@@ -410,4 +437,5 @@ def pred_indt():
 
 # Запуск парсера
 if f_success == ('Lexer', True):
+    print(('len_table_of_symbols', len_table_of_symbols))
     run_parser()
