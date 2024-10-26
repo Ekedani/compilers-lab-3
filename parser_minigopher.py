@@ -1,5 +1,6 @@
 from lexer_minigopher import lex
 from lexer_minigopher import table_of_symbols
+import contextlib
 
 f_success = lex()
 
@@ -11,18 +12,37 @@ num_row = 1  # Номер поточної лексеми
 len_table_of_symbols = len(table_of_symbols)  # Довжина таблиці лексем
 
 
+@contextlib.contextmanager
+def indent_manager():
+    global current_indent
+    current_indent += indent_step
+    try:
+        yield
+    finally:
+        current_indent -= indent_step
+
+
+indent_step = 2
+current_indent = 0
+
+
+def get_indent():
+    return ' ' * current_indent
+
+
 def run_parser():
     """
     Функція для розбору програми за правилом Program = { Declaration } MainSection.
     :return: True якщо розбір успішний, інакше викликає SystemExit
     """
     try:
-        parse_declaration_list()
-        parse_main_section()
-        print('Parser: Синтаксичний аналіз завершився успішно')
+        with indent_manager():
+            parse_declaration_list()
+            parse_main_section()
+        print(get_indent() + 'Parser: Синтаксичний аналіз завершився успішно')
         return True
     except SystemExit as e:
-        print('Parser: Аварійне завершення програми з кодом {0}'.format(e))
+        print(get_indent() + f'Parser: Аварійне завершення програми з кодом {e}')
         return False
 
 
@@ -30,10 +50,10 @@ def parse_declaration_list():
     """
     Функція для розбору списку декларацій {Declaration}
     """
-    print(next_indt() + 'parse_declaration_list():')
-    while parse_declaration():
-        pass
-    pred_indt()
+    print(get_indent() + 'parse_declaration_list():')
+    with indent_manager():
+        while parse_declaration():
+            pass
 
 
 def parse_declaration():
@@ -58,15 +78,15 @@ def parse_variable_decl():
     Функція для розбору декларації змінної:
     VariableDecl = 'var' Identifier TypeSpec [ '=' Expression ] ';'
     """
-    print(next_indt() + 'parse_variable_decl():')
-    parse_token('var', 'keyword')
-    parse_identifier()
-    parse_type_spec()
-    if check_current_token('='):
-        parse_token('=', 'assign_op')
-        parse_expression()
-    parse_token(';', 'punct')
-    pred_indt()
+    print(get_indent() + 'parse_variable_decl():')
+    with indent_manager():
+        parse_token('var', 'keyword')
+        parse_identifier()
+        parse_type_spec()
+        if check_current_token('='):
+            parse_token('=', 'assign_op')
+            parse_expression()
+        parse_token(';', 'punct')
 
 
 def parse_short_variable_decl():
@@ -74,12 +94,12 @@ def parse_short_variable_decl():
     Функція для розбору короткої декларації:
     ShortVariableDecl = Identifier ':=' Expression ';'
     """
-    print(next_indt() + 'parse_short_variable_decl():')
-    parse_identifier()
-    parse_token(':=', 'short_assign_op')
-    parse_expression()
-    parse_token(';', 'punct')
-    pred_indt()
+    print(get_indent() + 'parse_short_variable_decl():')
+    with indent_manager():
+        parse_identifier()
+        parse_token(':=', 'short_assign_op')
+        parse_expression()
+        parse_token(';', 'punct')
 
 
 def parse_const_decl():
@@ -87,14 +107,14 @@ def parse_const_decl():
     Функція для розбору декларації константи:
     ConstDecl = 'const' Identifier TypeSpec '=' Expression ';'
     """
-    print(next_indt() + 'parse_const_decl():')
-    parse_token('const', 'keyword')
-    parse_identifier()
-    parse_type_spec()
-    parse_token('=', 'assign_op')
-    parse_expression()
-    parse_token(';', 'punct')
-    pred_indt()
+    print(get_indent() + 'parse_const_decl():')
+    with indent_manager():
+        parse_token('const', 'keyword')
+        parse_identifier()
+        parse_type_spec()
+        parse_token('=', 'assign_op')
+        parse_expression()
+        parse_token(';', 'punct')
 
 
 def parse_type_spec():
@@ -115,18 +135,17 @@ def parse_main_section():
     Функція для розбору основної секції main:
     MainSection = 'func' 'main' '(' ')' '{' Statement { Statement | Declaration } '}'
     """
-    print(next_indt() + 'parse_main_section():')
-
-    parse_token('func', 'keyword')
-    parse_token('main', 'keyword')
-    parse_token('(', 'brackets_op')
-    parse_token(')', 'brackets_op')
-    parse_token('{', 'block_op')
-    while parse_statement() or parse_declaration():
-        pass
-    parse_token('}', 'block_op')
-
-    pred_indt()
+    print(get_indent() + 'parse_main_section():')
+    with indent_manager():
+        parse_token('func', 'keyword')
+        parse_token('main', 'keyword')
+        parse_token('(', 'brackets_op')
+        parse_token(')', 'brackets_op')
+        parse_token('{', 'block_op')
+        with indent_manager():
+            while parse_statement() or parse_declaration():
+                pass
+        parse_token('}', 'block_op')
 
 
 def parse_statement():
@@ -137,28 +156,27 @@ def parse_statement():
     num_line, lexeme, tok = get_symbol()
     if tok == 'id' and check_next_token('='):
         parse_assign()
-        res = True
+        return True
     elif lexeme == 'print':
         parse_output_stmt()
-        res = True
+        return True
     elif lexeme == 'scan':
         parse_input_stmt()
-        res = True
+        return True
     elif lexeme == 'for':
         parse_for_stmt()
-        res = True
+        return True
     elif lexeme == 'while':
         parse_while_stmt()
-        res = True
+        return True
     elif lexeme == 'if':
         parse_if_stmt()
-        res = True
+        return True
     elif lexeme == 'switch':
         parse_switch_stmt()
-        res = True
+        return True
     else:
-        res = False
-    return res
+        return False
 
 
 def parse_assign():
@@ -166,10 +184,12 @@ def parse_assign():
     Функція для розбору інструкції присвоювання:
     AssignmentStmt = Identifier '=' Expression ';'
     """
-    parse_identifier()
-    parse_token('=', 'assign_op')
-    parse_expression()
-    parse_token(';', 'punct')
+    print(get_indent() + 'parse_assign():')
+    with indent_manager():
+        parse_identifier()
+        parse_token('=', 'assign_op')
+        parse_expression()
+        parse_token(';', 'punct')
 
 
 def parse_output_stmt():
@@ -177,11 +197,13 @@ def parse_output_stmt():
     Функція для розбору інструкції виведення:
     OutputStmt = 'print' '(' ExpressionList ')' ';'
     """
-    parse_token('print', 'keyword')
-    parse_token('(', 'brackets_op')
-    parse_expression_list()
-    parse_token(')', 'brackets_op')
-    parse_token(';', 'punct')
+    print(get_indent() + 'parse_output_stmt():')
+    with indent_manager():
+        parse_token('print', 'keyword')
+        parse_token('(', 'brackets_op')
+        parse_expression_list()
+        parse_token(')', 'brackets_op')
+        parse_token(';', 'punct')
 
 
 def parse_input_stmt():
@@ -189,11 +211,13 @@ def parse_input_stmt():
     Функція для розбору інструкції введення:
     InputStmt = 'scan' '(' IdentifierList ')' ';'
     """
-    parse_token('scan', 'keyword')
-    parse_token('(', 'brackets_op')
-    parse_identifier_list()
-    parse_token(')', 'brackets_op')
-    parse_token(';', 'punct')
+    print(get_indent() + 'parse_input_stmt():')
+    with indent_manager():
+        parse_token('scan', 'keyword')
+        parse_token('(', 'brackets_op')
+        parse_identifier_list()
+        parse_token(')', 'brackets_op')
+        parse_token(';', 'punct')
 
 
 def check_current_token(expected_lexeme):
@@ -211,24 +235,21 @@ def parse_for_stmt():
     Функція для розбору інструкції ітеративного циклу:
     ForStmt = 'for' '(' Identifier ':=' ArithmExpression ';' Expression ';' Identifier '=' ArithmExpression ')' DoBlock.
     """
-    indent = next_indt()
-
-    print(indent + 'parse_for_stmt():')
-    parse_token('for', 'keyword')
-    parse_token('(', 'brackets_op')
-    parse_identifier()
-    parse_token(':=', 'short_assign_op')
-    parse_arithm_expression()
-    parse_token(';', 'punct')
-    parse_expression()
-    parse_token(';', 'punct')
-    parse_identifier()
-    parse_token('=', 'assign_op')
-    parse_arithm_expression()
-    parse_token(')', 'brackets_op')
-    parse_do_block()
-
-    pred_indt()
+    print(get_indent() + 'parse_for_stmt():')
+    with indent_manager():
+        parse_token('for', 'keyword')
+        parse_token('(', 'brackets_op')
+        parse_identifier()
+        parse_token(':=', 'short_assign_op')
+        parse_arithm_expression()
+        parse_token(';', 'punct')
+        parse_expression()
+        parse_token(';', 'punct')
+        parse_identifier()
+        parse_token('=', 'assign_op')
+        parse_arithm_expression()
+        parse_token(')', 'brackets_op')
+        parse_do_block()
 
 
 def parse_while_stmt():
@@ -236,9 +257,11 @@ def parse_while_stmt():
     Функція для розбору інструкції умовного циклу:
     WhileStmt = 'while' Expression DoBlock
     """
-    parse_token('while', 'keyword')
-    parse_expression()
-    parse_do_block()
+    print(get_indent() + 'parse_while_stmt():')
+    with indent_manager():
+        parse_token('while', 'keyword')
+        parse_expression()
+        parse_do_block()
 
 
 def parse_if_stmt():
@@ -246,12 +269,14 @@ def parse_if_stmt():
     Функція для розбору інструкції розгалуження:
     IfStmt = 'if' Expression DoBlock [ 'else' DoBlock ]
     """
-    parse_token('if', 'keyword')
-    parse_expression()
-    parse_do_block()
-    if check_current_token('else'):
-        parse_token('else', 'keyword')
+    print(get_indent() + 'parse_if_stmt():')
+    with indent_manager():
+        parse_token('if', 'keyword')
+        parse_expression()
         parse_do_block()
+        if check_current_token('else'):
+            parse_token('else', 'keyword')
+            parse_do_block()
 
 
 def parse_switch_stmt():
@@ -259,33 +284,40 @@ def parse_switch_stmt():
     Функція для розбору інструкції багатонаправленого розгалуження:
     SwitchStmt = 'switch' Expression '{' { CaseClause } [ DefaultClause ] '}'
     """
-    parse_token('switch', 'keyword')
-    parse_expression()
-    parse_token('{', 'block_op')
-    while check_current_token('case'):
-        parse_case_clause()
-    if check_current_token('default'):
-        parse_default_clause()
-    parse_token('}', 'block_op')
+    print(get_indent() + 'parse_switch_stmt():')
+    with indent_manager():
+        parse_token('switch', 'keyword')
+        parse_expression()
+        parse_token('{', 'block_op')
+        with indent_manager():
+            while check_current_token('case'):
+                parse_case_clause()
+            if check_current_token('default'):
+                parse_default_clause()
+        parse_token('}', 'block_op')
 
 
 def parse_case_clause():
     """
     CaseClause = 'case' Const ':' DoBlock
     """
-    parse_token('case', 'keyword')
-    parse_expression()
-    parse_token(':', 'punct')
-    parse_do_block()
+    print(get_indent() + 'parse_case_clause():')
+    with indent_manager():
+        parse_token('case', 'keyword')
+        parse_expression()
+        parse_token(':', 'punct')
+        parse_do_block()
 
 
 def parse_default_clause():
     """
     DefaultClause = 'default' ':' DoBlock
     """
-    parse_token('default', 'keyword')
-    parse_token(':', 'punct')
-    parse_do_block()
+    print(get_indent() + 'parse_default_clause():')
+    with indent_manager():
+        parse_token('default', 'keyword')
+        parse_token(':', 'punct')
+        parse_do_block()
 
 
 def parse_do_block():
@@ -295,37 +327,39 @@ def parse_do_block():
     num_line, lexeme, tok = get_symbol()
     if lexeme == '{':
         parse_token('{', 'block_op')
-        while parse_statement():
-            pass
+        with indent_manager():
+            while parse_statement():
+                pass
         parse_token('}', 'block_op')
     else:
         parse_statement()
 
 
 def parse_expression_list():
-    parse_expression()
-    while check_current_token(','):
-        parse_token(',', 'punct')
+    print(get_indent() + 'parse_expression_list():')
+    with indent_manager():
         parse_expression()
+        while check_current_token(','):
+            parse_token(',', 'punct')
+            parse_expression()
 
 
 def parse_identifier_list():
-    parse_identifier()
-    while check_current_token(','):
-        parse_token(',', 'punct')
+    print(get_indent() + 'parse_identifier_list():')
+    with indent_manager():
         parse_identifier()
+        while check_current_token(','):
+            parse_token(',', 'punct')
+            parse_identifier()
 
 
 def parse_expression():
     """
     Парсить головний нетермінал Expression = BoolExpression.
     """
-    indent = next_indt()
-    print(indent + 'parse_expression():')
-
-    parse_bool_expression()
-
-    pred_indt()
+    print(get_indent() + 'parse_expression():')
+    with indent_manager():
+        parse_bool_expression()
 
 
 def parse_bool_expression():
@@ -334,134 +368,112 @@ def parse_bool_expression():
                          | BoolConst
                          | '(' BoolExpression ')'.
     """
-    indent = next_indt()
-    print(indent + 'parse_bool_expression():')
-
-    num_line, lexeme, tok = get_symbol()
-
-    if tok == 'boolval':
-        # Парсинг булевої константи
-        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-        parse_token(lexeme, tok)
-    elif lexeme == '(' and tok == 'brackets_op':
-        # Парсинг вкладеного булевого виразу
-        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-        parse_token('(', 'brackets_op')
-        parse_bool_expression()
-        parse_token(')', 'brackets_op')
-    else:
-        # Парсинг арифметичного виразу з можливим RelOp
-        parse_arithm_expression()
-
+    print(get_indent() + 'parse_bool_expression():')
+    with indent_manager():
         num_line, lexeme, tok = get_symbol()
-        if tok == 'rel_op':
-            # Парсинг реляційного оператора
-            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-            parse_token(lexeme, 'rel_op')
-            parse_arithm_expression()
 
-    pred_indt()
+        if tok == 'boolval':
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+        elif lexeme == '(' and tok == 'brackets_op':
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token('(', 'brackets_op')
+            parse_bool_expression()
+            parse_token(')', 'brackets_op')
+        else:
+            parse_arithm_expression()
+            num_line, lexeme, tok = get_symbol()
+            if tok == 'rel_op':
+                # Парсинг реляційного оператора
+                print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+                parse_token(lexeme, 'rel_op')
+                parse_arithm_expression()
 
 
 def parse_arithm_expression():
     """
     Парсить ArithmExpression = Term { AddOp Term } | [ Sign ] Term.
     """
-    indent = next_indt()
-    print(indent + 'parse_arithm_expression():')
-
-    num_line, lexeme, tok = get_symbol()
-
-    if tok == 'sign':
-        # Парсинг унарного знака
-        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-        parse_token(lexeme, tok)
-
-    parse_term()
-
-    while True:
+    print(get_indent() + 'parse_arithm_expression():')
+    with indent_manager():
         num_line, lexeme, tok = get_symbol()
-        if tok == 'add_op':
-            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-            parse_token(lexeme, tok)
-            parse_term()
-        else:
-            break
 
-    pred_indt()
+        if tok == 'sign':
+            # Парсинг унарного знака
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+
+        parse_term()
+
+        while True:
+            num_line, lexeme, tok = get_symbol()
+            if tok == 'add_op':
+                print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+                parse_token(lexeme, tok)
+                parse_term()
+            else:
+                break
 
 
 def parse_term():
     """
     Парсить Term = Factor { MultOp Factor }.
     """
-    indent = next_indt()
-    print(indent + 'parse_term():')
+    print(get_indent() + 'parse_term():')
+    with indent_manager():
+        parse_factor()
 
-    parse_factor()
-
-    while True:
-        num_line, lexeme, tok = get_symbol()
-        if tok == 'mult_op':
-            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-            parse_token(lexeme, tok)
-            parse_factor()
-        else:
-            break
-
-    pred_indt()
+        while True:
+            num_line, lexeme, tok = get_symbol()
+            if tok == 'mult_op':
+                print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+                parse_token(lexeme, tok)
+                parse_factor()
+            else:
+                break
 
 
 def parse_factor():
     """
     Парсить Factor = Primary { PowerOp Primary }.
     """
-    indent = next_indt()
-    print(indent + 'parse_factor():')
+    print(get_indent() + 'parse_factor():')
+    with indent_manager():
+        parse_primary()
 
-    parse_primary()
-
-    while True:
-        num_line, lexeme, tok = get_symbol()
-        if tok == 'power_op':
-            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-            parse_token(lexeme, tok)
-            parse_primary()
-        else:
-            break
-
-    pred_indt()
+        while True:
+            num_line, lexeme, tok = get_symbol()
+            if tok == 'power_op':
+                print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+                parse_token(lexeme, tok)
+                parse_primary()
+            else:
+                break
 
 
 def parse_primary():
     """
     Парсить Primary = Identifier | NumConst | '(' ArithmExpression ')'.
     """
-    indent = next_indt()
-    print(indent + 'parse_primary():')
+    print(get_indent() + 'parse_primary():')
+    with indent_manager():
+        num_line, lexeme, tok = get_symbol()
 
-    num_line, lexeme, tok = get_symbol()
-
-    if tok in ('id', 'intnum', 'floatnum'):
-        # Парсинг ідентифікатора або числової константи
-        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-        parse_token(lexeme, tok)
-    elif lexeme == '(' and tok == 'brackets_op':
-        # Парсинг вкладеного арифметичного виразу
-        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-        parse_token('(', 'brackets_op')
-        parse_arithm_expression()
-        parse_token(')', 'brackets_op')
-    else:
-        fail_parse('невідповідність у Primary', (num_line, lexeme, tok))
-
-    pred_indt()
+        if tok in ('id', 'intnum', 'floatnum'):
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+        elif lexeme == '(' and tok == 'brackets_op':
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token('(', 'brackets_op')
+            parse_arithm_expression()
+            parse_token(')', 'brackets_op')
+        else:
+            fail_parse('невідповідність у Primary', (num_line, lexeme, tok))
 
 
 def parse_token(expected_lexeme, expected_token):
     global num_row
 
-    indent = next_indt()
     if num_row > len_table_of_symbols:
         fail_parse('неочікуваний кінець програми', (expected_lexeme, expected_token, num_row))
 
@@ -469,20 +481,15 @@ def parse_token(expected_lexeme, expected_token):
     num_row += 1
 
     if (lexeme, token) == (expected_lexeme, expected_token):
-        print(indent + 'parseToken: В рядку {0} токен {1}'.format(num_line, (expected_lexeme, expected_token)))
-        res = True
+        print(f"{get_indent()}parse_token: В рядку {num_line} - токен {(expected_lexeme, expected_token)}")
+        return True
     else:
         fail_parse('невідповідність токенів', (num_line, lexeme, token, expected_lexeme, expected_token))
-        res = False
-
-    pred_indt()
-    return res
+        return False
 
 
 def parse_identifier():
     global num_row
-
-    indent = next_indt()
 
     if num_row > len_table_of_symbols:
         fail_parse('неочікуваний кінець програми', ('<ідентифікатор>', 'id', num_row))
@@ -491,11 +498,10 @@ def parse_identifier():
     num_row += 1
 
     if token == 'id':
-        print(indent + 'parseIdentifier: В рядку {0} ідентифікатор {1}'.format(num_line, lexeme))
+        print(f"{get_indent()}parseIdentifier: В рядку {num_line} - ідентифікатор {lexeme}")
     else:
         fail_parse('невідповідність токенів', (num_line, lexeme, token, '<ідентифікатор>', 'id'))
 
-    pred_indt()
     return True
 
 
@@ -518,23 +524,6 @@ def fail_parse(message, details):
     exit(1)
 
 
-stepIndt = 2
-indt = 0
-
-
-def next_indt():
-    global indt
-    indt += stepIndt
-    return ' ' * indt
-
-
-def pred_indt():
-    global indt
-    indt -= stepIndt
-    return ' ' * indt
-
-
-# Запуск парсера
 if f_success == ('Lexer', True):
     print(('len_table_of_symbols', len_table_of_symbols))
     run_parser()
