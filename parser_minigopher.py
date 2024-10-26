@@ -209,21 +209,26 @@ def check_next_token(expected_lexeme):
 def parse_for_stmt():
     """
     Функція для розбору інструкції ітеративного циклу:
-    ForStmt = 'for' '(' Identifier ':=' ArExpr1 ';' ArExpr2 ';' [ AssignmentStmt ] ')' DoBlock
+    ForStmt = 'for' '(' Identifier ':=' ArithmExpression ';' Expression ';' Identifier '=' ArithmExpression ')' DoBlock.
     """
-    # TODO: grammar should be reconsidered
+    indent = next_indt()
+
+    print(indent + 'parse_for_stmt():')
     parse_token('for', 'keyword')
     parse_token('(', 'brackets_op')
     parse_identifier()
-    parse_token(':=', 'assign_op')
-    parse_expression()  # ArExpr1
+    parse_token(':=', 'short_assign_op')
+    parse_arithm_expression()
     parse_token(';', 'punct')
-    parse_expression()  # ArExpr2
+    parse_expression()
     parse_token(';', 'punct')
-    if check_current_token('id'):
-        parse_assign()
+    parse_identifier()
+    parse_token('=', 'assign_op')
+    parse_arithm_expression()
     parse_token(')', 'brackets_op')
     parse_do_block()
+
+    pred_indt()
 
 
 def parse_while_stmt():
