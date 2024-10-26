@@ -1,0 +1,37 @@
+var x int = 5;
+var y float = 3.14;
+const Pi float = 3.1415;
+var isActive bool;
+func main() {
+    index := 0;
+
+    isActive = true;
+
+    scan(a);
+
+    print(a);
+
+    if a % 2 == 0 {
+        print(0);
+    } else {
+        print(1);
+    }
+
+    switch a {
+        case 1:
+            print(1);
+        case 2:
+            print(2);
+        default:
+            print(3);
+    }
+
+    for (i := 1; i <= 5; i = i + 1) {
+        print(i);
+    }
+
+    i = 5;
+    while i > 0 {
+        print(i);
+        i = i - 1;
+    }
