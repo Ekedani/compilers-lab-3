@@ -163,6 +163,7 @@ def parse_statement():
 
 def parse_assign():
     """
+    Функція для розбору інструкції присвоювання:
     AssignmentStmt = Identifier '=' Expression ';'
     """
     parse_identifier()
@@ -173,6 +174,7 @@ def parse_assign():
 
 def parse_output_stmt():
     """
+    Функція для розбору інструкції виведення:
     OutputStmt = 'print' '(' ExpressionList ')' ';'
     """
     parse_token('print', 'keyword')
@@ -184,6 +186,7 @@ def parse_output_stmt():
 
 def parse_input_stmt():
     """
+    Функція для розбору інструкції введення:
     InputStmt = 'scan' '(' IdentifierList ')' ';'
     """
     parse_token('scan', 'keyword')
@@ -205,8 +208,10 @@ def check_next_token(expected_lexeme):
 
 def parse_for_stmt():
     """
+    Функція для розбору інструкції ітеративного циклу:
     ForStmt = 'for' '(' Identifier ':=' ArExpr1 ';' ArExpr2 ';' [ AssignmentStmt ] ')' DoBlock
     """
+    # TODO: grammar should be reconsidered
     parse_token('for', 'keyword')
     parse_token('(', 'brackets_op')
     parse_identifier()
@@ -223,6 +228,7 @@ def parse_for_stmt():
 
 def parse_while_stmt():
     """
+    Функція для розбору інструкції умовного циклу:
     WhileStmt = 'while' Expression DoBlock
     """
     parse_token('while', 'keyword')
@@ -232,6 +238,7 @@ def parse_while_stmt():
 
 def parse_if_stmt():
     """
+    Функція для розбору інструкції розгалуження:
     IfStmt = 'if' Expression DoBlock [ 'else' DoBlock ]
     """
     parse_token('if', 'keyword')
@@ -244,6 +251,7 @@ def parse_if_stmt():
 
 def parse_switch_stmt():
     """
+    Функція для розбору інструкції багатонаправленого розгалуження:
     SwitchStmt = 'switch' Expression '{' { CaseClause } [ DefaultClause ] '}'
     """
     parse_token('switch', 'keyword')
@@ -258,7 +266,7 @@ def parse_switch_stmt():
 
 def parse_case_clause():
     """
-    CaseClause = 'case' Constant ':' DoBlock
+    CaseClause = 'case' Const ':' DoBlock
     """
     parse_token('case', 'keyword')
     parse_expression()
@@ -304,16 +312,73 @@ def parse_identifier_list():
 
 
 def parse_expression():
+    """
+    Парсить головний нетермінал Expression = BoolExpression.
+    """
     indent = next_indt()
     print(indent + 'parse_expression():')
 
+    parse_bool_expression()
+
+    pred_indt()
+
+
+def parse_bool_expression():
+    """
+    Парсить BoolExpression = ArithmExpression [ RelOp ArithmExpression ]
+                         | BoolConst
+                         | '(' BoolExpression ')'.
+    """
+    indent = next_indt()
+    print(indent + 'parse_bool_expression():')
+
+    num_line, lexeme, tok = get_symbol()
+
+    if tok == 'boolval':
+        # Парсинг булевої константи
+        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
+        parse_token(lexeme, tok)
+    elif lexeme == '(' and tok == 'brackets_op':
+        # Парсинг вкладеного булевого виразу
+        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
+        parse_token('(', 'brackets_op')
+        parse_bool_expression()
+        parse_token(')', 'brackets_op')
+    else:
+        # Парсинг арифметичного виразу з можливим RelOp
+        parse_arithm_expression()
+
+        num_line, lexeme, tok = get_symbol()
+        if tok == 'rel_op':
+            # Парсинг реляційного оператора
+            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, 'rel_op')
+            parse_arithm_expression()
+
+    pred_indt()
+
+
+def parse_arithm_expression():
+    """
+    Парсить ArithmExpression = Term { AddOp Term } | [ Sign ] Term.
+    """
+    indent = next_indt()
+    print(indent + 'parse_arithm_expression():')
+
+    num_line, lexeme, tok = get_symbol()
+
+    if tok == 'sign':
+        # Парсинг унарного знака
+        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
+        parse_token(lexeme, tok)
+
     parse_term()
+
     while True:
         num_line, lexeme, tok = get_symbol()
-        if tok in 'add_op':
+        if tok == 'add_op':
             print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-            global num_row
-            num_row += 1
+            parse_token(lexeme, tok)
             parse_term()
         else:
             break
@@ -322,16 +387,19 @@ def parse_expression():
 
 
 def parse_term():
+    """
+    Парсить Term = Factor { MultOp Factor }.
+    """
     indent = next_indt()
     print(indent + 'parse_term():')
 
     parse_factor()
+
     while True:
         num_line, lexeme, tok = get_symbol()
-        if tok in 'mult_op':
+        if tok == 'mult_op':
             print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
-            global num_row
-            num_row += 1
+            parse_token(lexeme, tok)
             parse_factor()
         else:
             break
@@ -340,21 +408,47 @@ def parse_term():
 
 
 def parse_factor():
+    """
+    Парсить Factor = Primary { PowerOp Primary }.
+    """
     indent = next_indt()
     print(indent + 'parse_factor():')
 
-    num_line, lexeme, token = get_symbol()
-    global num_row
-    if token in ('intnum', 'floatnum', 'id', 'boolval'):
-        print(indent + f"в рядку {num_line} - токен ({lexeme}, {token})")
-        num_row += 1
-    elif lexeme == '(':
-        print(indent + f"в рядку {num_line} - токен ({lexeme}, 'brackets_op')")
-        num_row += 1
-        parse_expression()
+    parse_primary()
+
+    while True:
+        num_line, lexeme, tok = get_symbol()
+        if tok == 'power_op':
+            print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+            parse_primary()
+        else:
+            break
+
+    pred_indt()
+
+
+def parse_primary():
+    """
+    Парсить Primary = Identifier | NumConst | '(' ArithmExpression ')'.
+    """
+    indent = next_indt()
+    print(indent + 'parse_primary():')
+
+    num_line, lexeme, tok = get_symbol()
+
+    if tok in ('id', 'intnum', 'floatnum'):
+        # Парсинг ідентифікатора або числової константи
+        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
+        parse_token(lexeme, tok)
+    elif lexeme == '(' and tok == 'brackets_op':
+        # Парсинг вкладеного арифметичного виразу
+        print(indent + f"в рядку {num_line} - токен ({lexeme}, {tok})")
+        parse_token('(', 'brackets_op')
+        parse_arithm_expression()
         parse_token(')', 'brackets_op')
     else:
-        fail_parse('невідповідність у Expression.Factor', (num_line, lexeme, token))
+        fail_parse('невідповідність у Primary', (num_line, lexeme, tok))
 
     pred_indt()
 
