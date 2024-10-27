@@ -525,6 +525,57 @@ def fail_parse(message, details):
     exit(1)
 
 
+# Семантичний аналіз, таблиця змінних
+table_of_variables = {}
+
+
+# Функція для обробки оголошення змінної
+def proc_table_of_var(num_line, lexeme, var_type, value='undefined'):
+    if lexeme in table_of_variables:
+        fail_parse('повторне оголошення змінної', (num_line, lexeme, var_type))
+    else:
+        indx = len(table_of_variables) + 1
+        table_of_variables[lexeme] = (indx, var_type, value)
+
+
+# Функція для отримання типу змінної
+def get_type_var(ident):
+    try:
+        return table_of_variables[ident][1]
+    except KeyError:
+        return 'undeclared_variable'
+
+
+# Функція для перевірки ініціалізації змінної
+def is_init_var(ident):
+    try:
+        return table_of_variables[ident][2] == 'assigned'
+    except KeyError:
+        return 'undeclared_variable'
+
+
+# Функція для встановлення статусу ініціалізації змінної
+def initialize_variable(ident):
+    if ident in table_of_variables:
+        indx, var_type, _ = table_of_variables[ident]
+        table_of_variables[ident] = (indx, var_type, 'assigned')
+    else:
+        fail_parse("використання неоголошеної змінної", ident)
+
+
+# Функція для обчислення типу операцій
+def get_type_op(l_type, op, r_type):
+    types_are_same = l_type == r_type
+    types_arithm = l_type in ('int', 'float') and r_type in ('int', 'float')
+    if types_are_same and types_arithm and op in '+-*/':
+        return l_type
+    elif types_are_same and types_arithm and op in ('<', '<=', '>', '>=', '==', '!='):
+        return 'bool'
+    else:
+        return 'type_error'
+
+
+# Запуск парсера
 if f_success == ('Lexer', True):
     print(('len_table_of_symbols', len_table_of_symbols))
     run_parser()
