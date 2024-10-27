@@ -10,6 +10,8 @@ print('-' * 30)
 
 num_row = 1  # Номер поточної лексеми
 len_table_of_symbols = len(table_of_symbols)  # Довжина таблиці лексем
+indent_step = 2  # Крок відступу для виводу
+current_indent = 0  # Розмір поточного відступу
 
 
 @contextlib.contextmanager
@@ -20,10 +22,6 @@ def indent_manager():
         yield
     finally:
         current_indent -= indent_step
-
-
-indent_step = 2
-current_indent = 0
 
 
 def get_indent():
@@ -146,6 +144,9 @@ def parse_main_section():
             while parse_statement() or parse_declaration():
                 pass
         parse_token('}', 'block_op')
+    if num_row < len_table_of_symbols:
+        extra_token = get_symbol()
+        fail_parse('Неочікуваний токен після завершення main', extra_token)
 
 
 def parse_statement():
