@@ -197,11 +197,12 @@ def parse_assign():
         ident = parse_identifier()
         parse_token('=', 'assign_op')
         expr_type = parse_expression()
+        print(expr_type)
         parse_token(';', 'punct')
         initialize_variable(ident)
 
         var_type = get_type_var(ident)
-        if var_type != expr_type and not (var_type == 'float' and expr_type == 'int'):
+        if var_type != expr_type and not (var_type == 'floatnum' and expr_type == 'intnum'):
             fail_parse('Несумісні типи при присвоєнні', (ident, var_type, expr_type))
 
 
@@ -383,6 +384,7 @@ def parse_bool_expression():
     Парсить BoolExpression = ArithmExpression [ RelOp ArithmExpression ]
                          | BoolConst
                          | '(' BoolExpression ')'.
+    Повертає тип виразу.
     """
     print(get_indent() + 'parse_bool_expression():')
     with indent_manager():
@@ -420,7 +422,6 @@ def parse_bool_expression():
 def parse_arithm_expression():
     """
     Парсить ArithmExpression = Term { AddOp Term } | [ Sign ] Term.
-    Повертає тип виразу.
     """
     print(get_indent() + 'parse_arithm_expression():')
     with indent_manager():
@@ -611,11 +612,23 @@ def initialize_variable(ident):
 
 # Функція для обчислення типу операцій
 def get_type_op(l_type, op, r_type):
-    types_are_same = l_type == r_type
-    types_arithm = l_type in ('intnum', 'floatnum') and r_type in ('intnum', 'floatnum')
-    if types_are_same and types_arithm and op in '+-*/%':
-        return l_type
-    elif types_are_same and types_arithm and op in ('<', '<=', '>', '>=', '==', '!='):
+    """
+    Функція для визначення типу результату операції на основі типів операндів та оператора.
+    """
+    if op in ('+', '-', '*', '/', '%', '**'):
+        if l_type not in ('intnum', 'floatnum') or r_type not in ('intnum', 'floatnum'):
+            return 'type_error'
+        if op == '/':
+            if l_type == 'intnum' and r_type == 'intnum':
+                return 'intnum'
+            else:
+                return 'floatnum'
+        if l_type == 'floatnum' or r_type == 'floatnum':
+            return 'floatnum'
+        return 'intnum'
+    elif op in ('<', '<=', '>', '>=', '==', '!='):
+        if l_type not in ('intnum', 'floatnum', 'bool') or r_type not in ('intnum', 'floatnum', 'bool'):
+            return 'type_error'
         return 'bool'
     else:
         return 'type_error'
