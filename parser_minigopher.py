@@ -97,10 +97,12 @@ def parse_short_variable_decl():
     """
     print(get_indent() + 'parse_short_variable_decl():')
     with indent_manager():
-        parse_identifier()
+        ident = parse_identifier()
         parse_token(':=', 'short_assign_op')
-        parse_expression()
+        expr_type = parse_expression()
         parse_token(';', 'punct')
+        proc_table_of_var(ident, expr_type)
+        initialize_variable(ident)
 
 
 def parse_const_decl():
@@ -192,10 +194,15 @@ def parse_assign():
     """
     print(get_indent() + 'parse_assign():')
     with indent_manager():
-        parse_identifier()
+        ident = parse_identifier()
         parse_token('=', 'assign_op')
-        parse_expression()
+        expr_type = parse_expression()
         parse_token(';', 'punct')
+        initialize_variable(ident)
+
+        var_type = get_type_var(ident)
+        if var_type != expr_type and not (var_type == 'float' and expr_type == 'int'):
+            fail_parse('Несумісні типи при присвоєнні', (ident, var_type, expr_type))
 
 
 def parse_output_stmt():
@@ -221,9 +228,12 @@ def parse_input_stmt():
     with indent_manager():
         parse_token('scan', 'keyword')
         parse_token('(', 'brackets_op')
-        parse_identifier_list()
+        identifiers = parse_identifier_list()
         parse_token(')', 'brackets_op')
         parse_token(';', 'punct')
+
+        for ident in identifiers:
+            initialize_variable(ident)
 
 
 def check_current_token(expected_lexeme):
@@ -245,10 +255,7 @@ def parse_for_stmt():
     with indent_manager():
         parse_token('for', 'keyword')
         parse_token('(', 'brackets_op')
-        parse_identifier()
-        parse_token(':=', 'short_assign_op')
-        parse_arithm_expression()
-        parse_token(';', 'punct')
+        parse_short_variable_decl()
         parse_expression()
         parse_token(';', 'punct')
         parse_identifier()
@@ -353,19 +360,22 @@ def parse_expression_list():
 def parse_identifier_list():
     print(get_indent() + 'parse_identifier_list():')
     with indent_manager():
-        parse_identifier()
+        identifiers = [parse_identifier()]
         while check_current_token(','):
             parse_token(',', 'punct')
-            parse_identifier()
+            identifiers.append(parse_identifier())
+        return identifiers
 
 
 def parse_expression():
     """
     Парсить головний нетермінал Expression = BoolExpression.
+    Повертає тип виразу.
     """
     print(get_indent() + 'parse_expression():')
     with indent_manager():
-        parse_bool_expression()
+        expr_type = parse_bool_expression()
+        return expr_type
 
 
 def parse_bool_expression():
@@ -381,65 +391,78 @@ def parse_bool_expression():
         if tok == 'boolval':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
+            return 'bool'
         elif lexeme == '(' and tok == 'brackets_op':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token('(', 'brackets_op')
-            parse_bool_expression()
+            expr_type = parse_bool_expression()
             parse_token(')', 'brackets_op')
+            return expr_type
         else:
-            parse_arithm_expression()
+            left_type = parse_arithm_expression()
             num_line, lexeme, tok = get_symbol()
             if tok == 'rel_op':
-                # Парсинг реляційного оператора
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, 'rel_op')
-                parse_arithm_expression()
+                right_type = parse_arithm_expression()
+
+                if left_type not in ('intnum', 'floatnum', 'bool') or right_type not in ('intnum', 'floatnum', 'bool'):
+                    fail_parse('Невірні типи операндів для реляційного оператора', (left_type, lexeme, right_type))
+
+                expr_type = get_type_op(left_type, lexeme, right_type)
+                if expr_type != 'bool':
+                    fail_parse('Реляційний оператор не повертає тип bool', (left_type, lexeme, right_type))
+                return 'bool'
+            else:
+                return left_type
 
 
 def parse_arithm_expression():
     """
     Парсить ArithmExpression = Term { AddOp Term } | [ Sign ] Term.
+    Повертає тип виразу.
     """
     print(get_indent() + 'parse_arithm_expression():')
     with indent_manager():
-        num_line, lexeme, tok = get_symbol()
-
-        if tok == 'sign':
-            # Парсинг унарного знака
-            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
-            parse_token(lexeme, tok)
-
-        parse_term()
+        expr_type = parse_term()
 
         while True:
             num_line, lexeme, tok = get_symbol()
             if tok == 'add_op':
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
-                parse_term()
+                term_type = parse_term()
+                result_type = get_type_op(expr_type, lexeme, term_type)
+                if result_type == 'type_error':
+                    fail_parse('Несумісні типи в арифметичній операції', (expr_type, lexeme, term_type))
+                expr_type = result_type
             else:
                 break
+        return expr_type
 
 
 def parse_term():
     """
     Парсить Term = Factor { MultOp Factor }.
+    Повертає тип виразу.
     """
     print(get_indent() + 'parse_term():')
     with indent_manager():
-        parse_factor()
+        term_type = parse_factor()
 
         while True:
             num_line, lexeme, tok = get_symbol()
             if tok == 'mult_op':
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
-                parse_factor()
-
-                #if (lexeme == '/' or lexeme == '%') and get_symbol()[1] == '0':
-                 #   fail_parse("ділення на нуль", num_line)
+                factor_type = parse_factor()
+                result_type = get_type_op(term_type, lexeme, factor_type)
+                if result_type == 'type_error':
+                    fail_parse('Несумісні типи в множенні/діленні', (term_type, lexeme, factor_type))
+                term_type = result_type
             else:
                 break
+        return term_type
 
 
 def parse_factor():
@@ -448,16 +471,21 @@ def parse_factor():
     """
     print(get_indent() + 'parse_factor():')
     with indent_manager():
-        parse_primary()
+        factor_type = parse_primary()
 
         while True:
             num_line, lexeme, tok = get_symbol()
             if tok == 'power_op':
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
-                return parse_primary()
+                primary_type = parse_primary()
+                result_type = get_type_op(factor_type, lexeme, primary_type)
+                if result_type == 'type_error':
+                    fail_parse('Несумісні типи в операції піднесення до степеня', (factor_type, lexeme, primary_type))
+                factor_type = result_type
             else:
                 break
+        return factor_type
 
 
 def parse_primary():
@@ -476,11 +504,13 @@ def parse_primary():
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
             is_init_var(lexeme)
+            return get_type_var(lexeme)
         elif lexeme == '(' and tok == 'brackets_op':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token('(', 'brackets_op')
-            parse_arithm_expression()
+            expr_type = parse_arithm_expression()
             parse_token(')', 'brackets_op')
+            return expr_type
         else:
             fail_parse('невідповідність у Primary', (num_line, lexeme, tok))
 
@@ -564,15 +594,16 @@ def is_init_var(lexeme):
     if lexeme not in table_of_variables:
         fail_parse('використання неоголошеної змінної', (lexeme))
     else:
-        if table_of_variables[lexeme][2] != 'assigned' :
+        if table_of_variables[lexeme][2] != 'assigned':
             fail_parse('використання змінної без значення', (lexeme))
-
 
 
 # Функція для встановлення статусу ініціалізації змінної
 def initialize_variable(ident):
     if ident in table_of_variables:
         indx, var_type, _ = table_of_variables[ident]
+        if var_type in ['int', 'float']:
+            var_type += 'num'
         table_of_variables[ident] = (indx, var_type, 'assigned')
     else:
         fail_parse("використання неоголошеної змінної", ident)
@@ -581,8 +612,8 @@ def initialize_variable(ident):
 # Функція для обчислення типу операцій
 def get_type_op(l_type, op, r_type):
     types_are_same = l_type == r_type
-    types_arithm = l_type in ('int', 'float') and r_type in ('int', 'float')
-    if types_are_same and types_arithm and op in '+-*/':
+    types_arithm = l_type in ('intnum', 'floatnum') and r_type in ('intnum', 'floatnum')
+    if types_are_same and types_arithm and op in '+-*/%':
         return l_type
     elif types_are_same and types_arithm and op in ('<', '<=', '>', '>=', '==', '!='):
         return 'bool'
