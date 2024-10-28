@@ -1,5 +1,12 @@
 # Таблиця лексем мови
-tokenTable = { 'var': 'keyword', 'const': 'keyword', 'int': 'keyword', 'float': 'keyword', 'bool': 'keyword', 'print': 'keyword', 'scan': 'keyword', 'true': 'boolval', 'false': 'boolval', 'func': 'keyword', 'if': 'keyword', 'else': 'keyword', 'switch': 'keyword', 'case': 'keyword', 'for': 'keyword', 'default': 'keyword', 'while': 'keyword', 'main': 'keyword', ':=': 'assign_op', '=': 'assign_op', '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'mult_op', '%': 'mult_op', '**': 'power_op', '(': 'brackets_op', ')': 'brackets_op', '{': 'block_op', '}': 'block_op', '<': 'rel_op', '<=': 'rel_op', '==': 'rel_op', '>': 'rel_op', '>=': 'rel_op', '!=': 'rel_op', ',': 'punct', ';': 'punct', ':': 'punct', ' ': 'ws', '\t': 'ws', '\n': 'eol', '\r': 'eol' }
+tokenTable = {'var': 'keyword', 'const': 'keyword', 'int': 'keyword', 'float': 'keyword', 'bool': 'keyword',
+              'print': 'keyword', 'scan': 'keyword', 'true': 'boolval', 'false': 'boolval', 'func': 'keyword',
+              'if': 'keyword', 'else': 'keyword', 'switch': 'keyword', 'case': 'keyword', 'for': 'keyword',
+              'default': 'keyword', 'while': 'keyword', 'main': 'keyword', ':=': 'assign_op', '=': 'assign_op',
+              '+': 'add_op', '-': 'add_op', '*': 'mult_op', '/': 'mult_op', '%': 'mult_op', '**': 'power_op',
+              '(': 'brackets_op', ')': 'brackets_op', '{': 'block_op', '}': 'block_op', '<': 'rel_op', '<=': 'rel_op',
+              '==': 'rel_op', '>': 'rel_op', '>=': 'rel_op', '!=': 'rel_op', ',': 'punct', ';': 'punct', ':': 'punct',
+              ' ': 'ws', '\t': 'ws', '\n': 'eol', '\r': 'eol'}
 
 # Решту токенів визначаємо не за лексемою, а за заключним станом
 tokStateTable = {2: 'id', 6: 'floatnum', 7: 'intnum', 9: 'short_assign_op', 10: 'punct'}
@@ -56,7 +63,7 @@ stf = {
 }
 
 initState = 0  # q0 - стартовий стан
-F = {2, 6, 7, 9, 10, 11,  13, 14, 16, 17, 19, 20, 22, 23, 25, 30, 101, 102}
+F = {2, 6, 7, 9, 10, 11, 13, 14, 16, 17, 19, 20, 22, 23, 25, 30, 101, 102}
 
 Ferror = {101, 102}  # обробка помилок
 
@@ -87,8 +94,10 @@ def lex():
             char = nextChar()  # прочитати наступний символ
             classCh = classOfChar(char)  # до якого класу належить
             state = nextState(state, classCh)  # обчислити наступний стан
+            if classCh == 'eol':
+                numLine += 1
             if (is_final(state)):  # якщо стан заключний
-                if lexeme == '' :
+                if lexeme == '':
                     lexeme += char
                 processing()  # виконати семантичні процедури
             elif state == initState:
@@ -114,7 +123,7 @@ def processing():
             token = getToken(state, lexeme)
         if token == 'id':  # Якщо це id
             index = indexIdConst(state, lexeme)
-            print('{:<10s} {:<10s} {:<5d}'.format( lexeme, token, index))
+            print('{:<10s} {:<10s} {:<5d}'.format(lexeme, token, index))
             table_of_symbols[len(table_of_symbols) + 1] = (numLine, lexeme, token, index)
         else:
             print('{:<10s} {:<10s}'.format(lexeme, token))
@@ -154,7 +163,7 @@ def processing():
         state = initState
 
     elif state == 11:  # add_op, mult_op, brackets_op, block_op, punct (, ;)
-        #print(lexeme)
+        # print(lexeme)
 
         token = getToken(state, lexeme)
         print('{:<10s} {:<10s}'.format(lexeme, token))
@@ -237,11 +246,11 @@ def is_final(state):
         return False
 
 
-def nextState(state,classCh):
-  try:
-    return stf[(state,classCh)]
-  except KeyError:
-  	return stf[(state,'Other')]
+def nextState(state, classCh):
+    try:
+        return stf[(state, classCh)]
+    except KeyError:
+        return stf[(state, 'Other')]
 
 
 def nextChar():
