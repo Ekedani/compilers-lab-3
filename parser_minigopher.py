@@ -79,11 +79,14 @@ def parse_variable_decl():
     print(get_indent() + 'parse_variable_decl():')
     with indent_manager():
         parse_token('var', 'keyword')
-        parse_identifier()
-        parse_type_spec()
+
+        ident = parse_identifier()
+        proc_table_of_var(ident, parse_type_spec())
+
         if check_current_token('='):
             parse_token('=', 'assign_op')
             parse_expression()
+            initialize_variable(ident)
         parse_token(';', 'punct')
 
 
@@ -108,10 +111,11 @@ def parse_const_decl():
     print(get_indent() + 'parse_const_decl():')
     with indent_manager():
         parse_token('const', 'keyword')
-        parse_identifier()
-        parse_type_spec()
+        ident = parse_identifier()
+        proc_table_of_var(ident, parse_type_spec())
         parse_token('=', 'assign_op')
         parse_expression()
+        initialize_variable(ident)
         parse_token(';', 'punct')
 
 
@@ -124,6 +128,7 @@ def parse_type_spec():
     if lexeme in ['int', 'float', 'bool']:
         global num_row
         num_row += 1
+        return lexeme
     else:
         fail_parse('невідповідний тип', (num_line, lexeme, tok))
 
@@ -430,6 +435,9 @@ def parse_term():
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
                 parse_factor()
+
+                #if (lexeme == '/' or lexeme == '%') and get_symbol()[1] == '0':
+                 #   fail_parse("ділення на нуль", num_line)
             else:
                 break
 
@@ -447,7 +455,7 @@ def parse_factor():
             if tok == 'power_op':
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
-                parse_primary()
+                return parse_primary()
             else:
                 break
 
@@ -460,9 +468,14 @@ def parse_primary():
     with indent_manager():
         num_line, lexeme, tok = get_symbol()
 
-        if tok in ('id', 'intnum', 'floatnum'):
+        if tok in ('intnum', 'floatnum'):
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
+            return tok
+        elif tok == 'id':
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+            is_init_var(lexeme)
         elif lexeme == '(' and tok == 'brackets_op':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token('(', 'brackets_op')
@@ -503,7 +516,7 @@ def parse_identifier():
     else:
         fail_parse('невідповідність токенів', (num_line, lexeme, token, '<ідентифікатор>', 'id'))
 
-    return True
+    return lexeme
 
 
 def get_symbol():
@@ -530,9 +543,9 @@ table_of_variables = {}
 
 
 # Функція для обробки оголошення змінної
-def proc_table_of_var(num_line, lexeme, var_type, value='undefined'):
+def proc_table_of_var(lexeme, var_type, value='undefined'):
     if lexeme in table_of_variables:
-        fail_parse('повторне оголошення змінної', (num_line, lexeme, var_type))
+        fail_parse('повторне оголошення змінної', (lexeme, var_type))
     else:
         indx = len(table_of_variables) + 1
         table_of_variables[lexeme] = (indx, var_type, value)
@@ -547,11 +560,13 @@ def get_type_var(ident):
 
 
 # Функція для перевірки ініціалізації змінної
-def is_init_var(ident):
-    try:
-        return table_of_variables[ident][2] == 'assigned'
-    except KeyError:
-        return 'undeclared_variable'
+def is_init_var(lexeme):
+    if lexeme not in table_of_variables:
+        fail_parse('використання неоголошеної змінної', (lexeme))
+    else:
+        if table_of_variables[lexeme][2] != 'assigned' :
+            fail_parse('використання змінної без значення', (lexeme))
+
 
 
 # Функція для встановлення статусу ініціалізації змінної
@@ -579,3 +594,4 @@ def get_type_op(l_type, op, r_type):
 if f_success == ('Lexer', True):
     print(('len_table_of_symbols', len_table_of_symbols))
     run_parser()
+    print(table_of_variables)
