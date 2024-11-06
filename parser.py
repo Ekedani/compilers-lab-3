@@ -1,5 +1,5 @@
-from lexer_minigopher import lex
-from lexer_minigopher import table_of_symbols
+from lexer import lex
+from lexer import table_of_symbols
 import contextlib
 
 f_success = lex()

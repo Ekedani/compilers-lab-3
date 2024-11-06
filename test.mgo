@@ -9,6 +9,7 @@ func main() {
     var a int;
     scan(a);
     print(a);
+    var g int = 123 + 345 + 678 + 11;
     if a % 2 == 0 {
         print(0);
     } else {
