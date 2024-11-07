@@ -197,7 +197,6 @@ def parse_assign():
         ident = parse_identifier()
         parse_token('=', 'assign_op')
         expr_type = parse_expression()
-        print(expr_type)
         parse_token(';', 'punct')
         initialize_variable(ident)
 
@@ -370,54 +369,26 @@ def parse_identifier_list():
 
 def parse_expression():
     """
-    Парсить головний нетермінал Expression = BoolExpression.
+    Парсить Expression = ArithmExpression [ RelOp ArithmExpression ].
     Повертає тип виразу.
     """
     print(get_indent() + 'parse_expression():')
     with indent_manager():
-        expr_type = parse_bool_expression()
-        return expr_type
-
-
-def parse_bool_expression():
-    """
-    Парсить BoolExpression = ArithmExpression [ RelOp ArithmExpression ]
-                         | BoolConst
-                         | '(' BoolExpression ')'.
-    Повертає тип виразу.
-    """
-    print(get_indent() + 'parse_bool_expression():')
-    with indent_manager():
+        left_type = parse_arithm_expression()
         num_line, lexeme, tok = get_symbol()
-
-        if tok == 'boolval':
+        if tok == 'rel_op':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
-            parse_token(lexeme, tok)
+            parse_token(lexeme, 'rel_op')
+            right_type = parse_arithm_expression()
+
+            # Перевірка типів операндів реляційного оператора
+            if left_type not in ('int', 'float', 'intnum', 'floatnum') or right_type not in ('int', 'float', 'intnum', 'floatnum'):
+                fail_parse('Невірні типи операндів для реляційного оператора', (left_type, lexeme, right_type))
+
+            # Результат реляційного виразу завжди 'bool'
             return 'bool'
-        elif lexeme == '(' and tok == 'brackets_op':
-            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
-            parse_token('(', 'brackets_op')
-            expr_type = parse_bool_expression()
-            parse_token(')', 'brackets_op')
-            return expr_type
         else:
-            left_type = parse_arithm_expression()
-            num_line, lexeme, tok = get_symbol()
-            if tok == 'rel_op':
-                print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
-                parse_token(lexeme, 'rel_op')
-                right_type = parse_arithm_expression()
-
-                if left_type not in ('intnum', 'floatnum', 'bool') or right_type not in ('intnum', 'floatnum', 'bool'):
-                    fail_parse('Невірні типи операндів для реляційного оператора', (left_type, lexeme, right_type))
-
-                expr_type = get_type_op(left_type, lexeme, right_type)
-                if expr_type != 'bool':
-                    fail_parse('Реляційний оператор не повертає тип bool', (left_type, lexeme, right_type))
-                return 'bool'
-            else:
-                return left_type
-
+            return left_type
 
 def parse_arithm_expression():
     """
@@ -491,7 +462,7 @@ def parse_factor():
 
 def parse_primary():
     """
-    Парсить Primary = Identifier | NumConst | '(' ArithmExpression ')'.
+    Parses Primary = Identifier | NumConst | BoolConst | '(' Expression ')'.
     """
     print(get_indent() + 'parse_primary():')
     with indent_manager():
@@ -501,6 +472,10 @@ def parse_primary():
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
             return tok
+        elif tok == 'boolval':
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+            return 'bool'
         elif tok == 'id':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
@@ -509,7 +484,7 @@ def parse_primary():
         elif lexeme == '(' and tok == 'brackets_op':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token('(', 'brackets_op')
-            expr_type = parse_arithm_expression()
+            expr_type = parse_expression()
             parse_token(')', 'brackets_op')
             return expr_type
         else:

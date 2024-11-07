@@ -4,12 +4,13 @@ const Pi float = 3.1415;
 var testIntFloat float = 1;
 var isActive bool;
 func main() {
+    test := x + y;
     index := 0;
     isActive = true;
     var a int;
     scan(a);
     print(a);
-    var g int = 123 + 345 + 678 + 11;
+    var g int = ((123 + (345 + 678)) + 11);
     if a % 2 == 0 {
         print(0);
     } else {
