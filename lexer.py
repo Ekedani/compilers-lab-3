@@ -274,14 +274,14 @@ def classOfChar(c):
         return 'Colon'
     elif c in Equal:
         return 'Equal'
+    elif c in {'<', '>', '!', '*'}:
+        return c
     elif c in Operator:
         return 'Operator'
     elif c in Whitespace:
         return 'ws'
     elif c in EndOfLine:
         return 'eol'
-    elif c in {'<', '>', '!'}:
-        return c
     else:
         return 'Other'
 
