@@ -1,5 +1,6 @@
 from lexer import lex
 from lexer import table_of_symbols
+from postfix_generator import PostfixGenerator
 import contextlib
 
 f_success = lex()
@@ -12,6 +13,7 @@ num_row = 1  # Номер поточної лексеми
 len_table_of_symbols = len(table_of_symbols)  # Довжина таблиці лексем
 indent_step = 2  # Крок відступу для виводу
 current_indent = 0  # Розмір поточного відступу
+postfix_generator = PostfixGenerator()  # Ініціалізація генератора постфіксного коду
 
 
 @contextlib.contextmanager
@@ -85,7 +87,9 @@ def parse_variable_decl():
 
         if check_current_token('='):
             parse_token('=', 'assign_op')
+            postfix_generator.add_to_postfix(ident, 'l-val')
             parse_expression()
+            postfix_generator.add_to_postfix('=', 'assign')
             initialize_variable(ident)
         parse_token(';', 'punct')
 
@@ -99,7 +103,9 @@ def parse_short_variable_decl():
     with indent_manager():
         ident = parse_identifier()
         parse_token(':=', 'short_assign_op')
+        postfix_generator.add_to_postfix(ident, 'l-val')
         expr_type = parse_expression()
+        postfix_generator.add_to_postfix('=', 'assign')
         parse_token(';', 'punct')
         proc_table_of_var(ident, expr_type)
         initialize_variable(ident)
@@ -116,8 +122,10 @@ def parse_const_decl():
         ident = parse_identifier()
         proc_table_of_var(ident, parse_type_spec())
         parse_token('=', 'assign_op')
+        postfix_generator.add_to_postfix(ident, 'l-val')
         parse_expression()
         initialize_variable(ident)
+        postfix_generator.add_to_postfix('=', 'assign')
         parse_token(';', 'punct')
 
 
@@ -195,11 +203,13 @@ def parse_assign():
     print(get_indent() + 'parse_assign():')
     with indent_manager():
         ident = parse_identifier()
+        postfix_generator.add_to_postfix(ident, 'l-val')
         parse_token('=', 'assign_op')
         expr_type = parse_expression()
+        postfix_generator.add_to_postfix('=', 'assign_op')
         parse_token(';', 'punct')
-        initialize_variable(ident)
 
+        initialize_variable(ident)
         var_type = get_type_var(ident)
         if var_type != expr_type and not (var_type == 'floatnum' and expr_type == 'intnum'):
             fail_parse('Несумісні типи при присвоєнні', (ident, var_type, expr_type))
@@ -380,15 +390,18 @@ def parse_expression():
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, 'rel_op')
             right_type = parse_arithm_expression()
+            postfix_generator.add_to_postfix(lexeme, 'rel_op')
 
             # Перевірка типів операндів реляційного оператора
-            if left_type not in ('int', 'float', 'intnum', 'floatnum') or right_type not in ('int', 'float', 'intnum', 'floatnum'):
+            if left_type not in ('int', 'float', 'intnum', 'floatnum') or right_type not in (
+            'int', 'float', 'intnum', 'floatnum'):
                 fail_parse('Невірні типи операндів для реляційного оператора', (left_type, lexeme, right_type))
 
             # Результат реляційного виразу завжди 'bool'
             return 'bool'
         else:
             return left_type
+
 
 def parse_arithm_expression():
     """
@@ -404,6 +417,7 @@ def parse_arithm_expression():
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
                 term_type = parse_term()
+                postfix_generator.add_to_postfix(lexeme, 'add_op')
                 result_type = get_type_op(expr_type, lexeme, term_type)
                 if result_type == 'type_error':
                     fail_parse('Несумісні типи в арифметичній операції', (expr_type, lexeme, term_type))
@@ -428,6 +442,7 @@ def parse_term():
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
                 factor_type = parse_factor()
+                postfix_generator.add_to_postfix(lexeme, 'mult_op')
                 result_type = get_type_op(term_type, lexeme, factor_type)
                 if result_type == 'type_error':
                     fail_parse('Несумісні типи в множенні/діленні', (term_type, lexeme, factor_type))
@@ -451,6 +466,7 @@ def parse_factor():
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
                 primary_type = parse_primary()
+                postfix_generator.add_to_postfix(lexeme, 'power_op')
                 result_type = get_type_op(factor_type, lexeme, primary_type)
                 if result_type == 'type_error':
                     fail_parse('Несумісні типи в операції піднесення до степеня', (factor_type, lexeme, primary_type))
@@ -470,14 +486,17 @@ def parse_primary():
         if tok in ('intnum', 'floatnum'):
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
+            postfix_generator.add_to_postfix(lexeme, tok)
             return tok
         elif tok == 'boolval':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
+            postfix_generator.add_to_postfix(lexeme, tok)
             return 'bool'
         elif tok == 'id':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
+            postfix_generator.add_to_postfix(lexeme, 'r-val')
             is_init_var(lexeme)
             return get_type_var(lexeme)
         elif lexeme == '(' and tok == 'brackets_op':
@@ -613,3 +632,4 @@ if f_success == ('Lexer', True):
     print(('len_table_of_symbols', len_table_of_symbols))
     run_parser()
     print(table_of_variables)
+    print(postfix_generator.get_postfix_code())
