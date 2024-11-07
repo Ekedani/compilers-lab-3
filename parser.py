@@ -467,7 +467,6 @@ def parse_primary():
     print(get_indent() + 'parse_primary():')
     with indent_manager():
         num_line, lexeme, tok = get_symbol()
-
         if tok in ('intnum', 'floatnum'):
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
