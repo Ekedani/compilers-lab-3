@@ -415,7 +415,20 @@ def parse_arithm_expression():
     """
     print(get_indent() + 'parse_arithm_expression():')
     with indent_manager():
-        expr_type = parse_term()
+        num_line, lexeme, tok = get_symbol()
+
+        if lexeme in ('+', '-') and tok == 'add_op':
+            print(f"{get_indent()}в рядку {num_line} - унарний оператор ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+            term_type = parse_term()
+
+            postfix_generator.add_to_postfix(lexeme, 'unary_op')
+
+            if term_type not in ('int', 'float', 'intnum', 'floatnum'):
+                fail_parse('Невірний тип операнда для унарного оператора', (lexeme, term_type))
+            expr_type = term_type
+        else:
+            expr_type = parse_term()
 
         while True:
             num_line, lexeme, tok = get_symbol()

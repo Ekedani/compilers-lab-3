@@ -5,7 +5,7 @@ var testIntFloat float = 1;
 var isActive bool;
 func main() {
     test := x + y;
-    index := 0;
+    index := -1;
     isActive = true;
     var a int;
     scan(a);
