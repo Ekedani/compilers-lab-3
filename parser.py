@@ -224,7 +224,7 @@ def parse_output_stmt():
     with indent_manager():
         parse_token('print', 'keyword')
         parse_token('(', 'brackets_op')
-        parse_expression_list()
+        parse_output_expression_list()
         parse_token(')', 'brackets_op')
         parse_token(';', 'punct')
 
@@ -238,7 +238,7 @@ def parse_input_stmt():
     with indent_manager():
         parse_token('scan', 'keyword')
         parse_token('(', 'brackets_op')
-        identifiers = parse_identifier_list()
+        identifiers = parse_input_identifier_list()
         parse_token(')', 'brackets_op')
         parse_token(';', 'punct')
 
@@ -358,22 +358,28 @@ def parse_do_block():
         parse_statement()
 
 
-def parse_expression_list():
-    print(get_indent() + 'parse_expression_list():')
+def parse_output_expression_list():
+    print(get_indent() + 'parse_output_expression_list():')
     with indent_manager():
         parse_expression()
+        postfix_generator.add_to_postfix('OUT', 'out')
         while check_current_token(','):
             parse_token(',', 'punct')
             parse_expression()
+            postfix_generator.add_to_postfix('OUT', 'out')
 
 
-def parse_identifier_list():
-    print(get_indent() + 'parse_identifier_list():')
+def parse_input_identifier_list():
+    print(get_indent() + 'parse_input_identifier_list():')
     with indent_manager():
         identifiers = [parse_identifier()]
+        postfix_generator.add_to_postfix(identifiers[-1], 'r-val')
+        postfix_generator.add_to_postfix('IN', 'in')
         while check_current_token(','):
             parse_token(',', 'punct')
             identifiers.append(parse_identifier())
+            postfix_generator.add_to_postfix(identifiers[-1], 'r-val')
+            postfix_generator.add_to_postfix('IN', 'in')
         return identifiers
 
 

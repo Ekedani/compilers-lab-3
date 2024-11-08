@@ -12,7 +12,7 @@ func main() {
     print(a);
     var g int = ((123 * (345 + 678)) + 11**(2+2)**3);
     if a % 2 == 0 {
-        print(0);
+        print(0, 2, 3);
     } else {
         print(1);
     }
