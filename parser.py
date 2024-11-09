@@ -90,7 +90,7 @@ def parse_variable_decl():
             parse_token('=', 'assign_op')
             postfix_generator.add_to_postfix(ident, 'l-val')
             parse_expression()
-            postfix_generator.add_to_postfix('=', 'assign')
+            postfix_generator.add_to_postfix('=', 'assign_op')
             initialize_variable(ident)
         parse_token(';', 'punct')
 
@@ -106,7 +106,7 @@ def parse_short_variable_decl():
         parse_token(':=', 'short_assign_op')
         postfix_generator.add_to_postfix(ident, 'l-val')
         expr_type = parse_expression()
-        postfix_generator.add_to_postfix('=', 'assign')
+        postfix_generator.add_to_postfix('=', 'assign_op')
         parse_token(';', 'punct')
         proc_table_of_var(ident, expr_type)
         initialize_variable(ident)
@@ -126,7 +126,7 @@ def parse_const_decl():
         postfix_generator.add_to_postfix(ident, 'l-val')
         parse_expression()
         initialize_variable(ident)
-        postfix_generator.add_to_postfix('=', 'assign')
+        postfix_generator.add_to_postfix('=', 'assign_op')
         parse_token(';', 'punct')
 
 
@@ -276,9 +276,11 @@ def parse_for_stmt():
         postfix_generator.add_conditional_jump(label_end)
 
         parse_token(';', 'punct')
-        parse_identifier()
+        id = parse_identifier()
+        postfix_generator.add_to_postfix(id, 'l-val')
         parse_token('=', 'assign_op')
         parse_arithm_expression()
+        postfix_generator.add_to_postfix('=', 'assign_op')
         parse_token(')', 'brackets_op')
         parse_do_block()
 
@@ -339,7 +341,9 @@ def parse_switch_stmt():
     print(get_indent() + 'parse_switch_stmt():')
     with indent_manager():
         parse_token('switch', 'keyword')
+
         parse_expression()
+        comparison_var = postfix_generator.get_postfix_code()[-1][0]
 
         parse_token('{', 'block_op')
 
@@ -350,21 +354,22 @@ def parse_switch_stmt():
                 case_label = postfix_generator.new_label()
                 case_labels.append(case_label)
 
-                parse_case_clause(case_label, end_label)
+                parse_case_clause(case_label, end_label, comparison_var)
             if check_current_token('default'):
                 parse_default_clause()
         postfix_generator.add_label(end_label)
         parse_token('}', 'block_op')
 
 
-def parse_case_clause(case_label, end_label):
+def parse_case_clause(case_label, end_label, comparison_var):
     """
     CaseClause = 'case' Const ':' DoBlock
     """
     print(get_indent() + 'parse_case_clause():')
     with indent_manager():
         parse_token('case', 'keyword')
-
+        if postfix_generator.get_postfix_code()[-1][0] != comparison_var:
+            postfix_generator.add_to_postfix(comparison_var, 'r-val')
         parse_expression()
 
         postfix_generator.add_to_postfix('==', 'rel_op')
