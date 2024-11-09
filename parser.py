@@ -1,6 +1,7 @@
 from lexer import lex
 from lexer import table_of_symbols
 from postfix_generator import PostfixGenerator
+from tabulate import tabulate
 import contextlib
 
 f_success = lex()
@@ -263,16 +264,26 @@ def parse_for_stmt():
     """
     print(get_indent() + 'parse_for_stmt():')
     with indent_manager():
+        label_start = postfix_generator.new_label()
+        label_end = postfix_generator.new_label()
+
         parse_token('for', 'keyword')
         parse_token('(', 'brackets_op')
         parse_short_variable_decl()
+
+        postfix_generator.add_label(label_start)
         parse_expression()
+        postfix_generator.add_conditional_jump(label_end)
+
         parse_token(';', 'punct')
         parse_identifier()
         parse_token('=', 'assign_op')
         parse_arithm_expression()
         parse_token(')', 'brackets_op')
         parse_do_block()
+
+        postfix_generator.add_unconditional_jump(label_start)
+        postfix_generator.add_label(label_end)
 
 
 def parse_while_stmt():
@@ -282,9 +293,18 @@ def parse_while_stmt():
     """
     print(get_indent() + 'parse_while_stmt():')
     with indent_manager():
+        label_start = postfix_generator.new_label()
+        label_end = postfix_generator.new_label()
+
+        postfix_generator.add_label(label_start)
         parse_token('while', 'keyword')
         parse_expression()
+
+        postfix_generator.add_conditional_jump(label_end)
         parse_do_block()
+
+        postfix_generator.add_unconditional_jump(label_start)
+        postfix_generator.add_label(label_end)
 
 
 def parse_if_stmt():
@@ -296,10 +316,19 @@ def parse_if_stmt():
     with indent_manager():
         parse_token('if', 'keyword')
         parse_expression()
+        label_else = postfix_generator.new_label()
+
+        postfix_generator.add_conditional_jump(label_else)
         parse_do_block()
         if check_current_token('else'):
+            label_end = postfix_generator.new_label()
+            postfix_generator.add_unconditional_jump(label_end)  # Перехід після блоку if
+            postfix_generator.add_label(label_else)
             parse_token('else', 'keyword')
             parse_do_block()
+            postfix_generator.add_label(label_end)
+        else:
+            postfix_generator.add_label(label_else)
 
 
 def parse_switch_stmt():
@@ -311,25 +340,45 @@ def parse_switch_stmt():
     with indent_manager():
         parse_token('switch', 'keyword')
         parse_expression()
+
         parse_token('{', 'block_op')
+
+        case_labels = []
+        end_label = postfix_generator.new_label()
         with indent_manager():
             while check_current_token('case'):
-                parse_case_clause()
+                case_label = postfix_generator.new_label()
+                case_labels.append(case_label)
+
+                parse_case_clause(case_label, end_label)
             if check_current_token('default'):
                 parse_default_clause()
+        postfix_generator.add_label(end_label)
         parse_token('}', 'block_op')
 
 
-def parse_case_clause():
+def parse_case_clause(case_label, end_label):
     """
     CaseClause = 'case' Const ':' DoBlock
     """
     print(get_indent() + 'parse_case_clause():')
     with indent_manager():
         parse_token('case', 'keyword')
+
         parse_expression()
+
+        postfix_generator.add_to_postfix('==', 'rel_op')
+        next_case_label = postfix_generator.new_label()
+        postfix_generator.add_conditional_jump(next_case_label)
+
+        postfix_generator.add_label(case_label)
+
         parse_token(':', 'punct')
         parse_do_block()
+
+        postfix_generator.add_unconditional_jump(end_label)
+
+        postfix_generator.add_label(next_case_label)
 
 
 def parse_default_clause():
@@ -652,3 +701,7 @@ if f_success == ('Lexer', True):
     run_parser()
     print(table_of_variables)
     print(postfix_generator.get_postfix_code())
+
+    print("Program code in postfix form:")
+    formatted_table = [(i, item[0], item[1]) for i, item in enumerate(postfix_generator.get_postfix_code())]
+    print(tabulate(formatted_table, headers=["№", "Element", "Type"  ], tablefmt="plain"))

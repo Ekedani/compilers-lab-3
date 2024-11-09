@@ -12,7 +12,15 @@ class PostfixGenerator:
         return label
 
     def add_label(self, label):
-        self.add_to_postfix(f'{label}:', 'label')
+        self.add_to_postfix(f'{label}', 'label')
 
     def get_postfix_code(self):
         return self.postfix_code
+
+    def add_conditional_jump(self, label):
+        self.add_label(label)
+        self.add_to_postfix(f'JF', 'jf')
+
+    def add_unconditional_jump(self, label):
+        self.add_label(label)
+        self.add_to_postfix(f'JMP', 'jump')
