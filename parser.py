@@ -522,25 +522,22 @@ def parse_term():
 
 def parse_factor():
     """
-    Парсить Factor = Primary { PowerOp Primary }.
+    Парсить Factor = Primary [ PowerOp Factor ].
     """
     print(get_indent() + 'parse_factor():')
     with indent_manager():
         factor_type = parse_primary()
 
-        while True:
-            num_line, lexeme, tok = get_symbol()
-            if tok == 'power_op':
-                print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
-                parse_token(lexeme, tok)
-                primary_type = parse_primary()
-                postfix_generator.add_to_postfix(lexeme, 'power_op')
-                result_type = get_type_op(factor_type, lexeme, primary_type)
-                if result_type == 'type_error':
-                    fail_parse('Несумісні типи в операції піднесення до степеня', (factor_type, lexeme, primary_type))
-                factor_type = result_type
-            else:
-                break
+        num_line, lexeme, tok = get_symbol()
+        if tok == 'power_op':
+            print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
+            parse_token(lexeme, tok)
+            primary_type = parse_factor()
+            postfix_generator.add_to_postfix(lexeme, 'power_op')
+            result_type = get_type_op(factor_type, lexeme, primary_type)
+            if result_type == 'type_error':
+                fail_parse('Несумісні типи в операції піднесення до степеня', (factor_type, lexeme, primary_type))
+            factor_type = result_type
         return factor_type
 
 
