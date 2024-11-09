@@ -427,7 +427,7 @@ def parse_input_identifier_list():
         while check_current_token(','):
             parse_token(',', 'punct')
             identifiers.append(parse_identifier())
-            postfix_generator.add_to_postfix(identifiers[-1], 'r-val')
+            postfix_generator.add_to_postfix(identifiers[-1], 'l-val')
             postfix_generator.add_to_postfix('IN', 'in')
         return identifiers
 
