@@ -73,7 +73,7 @@ class PostfixStackMachine:
         self._parse_header(".target: PSM")
         self._parse_header(".version: 1.0")
         self._parse_section("VarDecl")
-        # self._parse_section("LblDecl")
+        self._parse_section("LblDecl")
         # self._parse_section("ConstDecl")
         self._parse_section("Code")
 

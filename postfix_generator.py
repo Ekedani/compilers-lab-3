@@ -1,6 +1,7 @@
 class PostfixGenerator:
     def __init__(self):
         self.variables = []
+        self.labels = []
         self.postfix_code = []
         self.label_count = 0
 
@@ -10,6 +11,7 @@ class PostfixGenerator:
     def new_label(self):
         label = f"L{self.label_count}"
         self.label_count += 1
+        self.labels.append((label, len(self.postfix_code)))
         return label
 
     def add_label(self, label):
@@ -38,6 +40,11 @@ class PostfixGenerator:
             f.write(".vars(\n")
             for name, var_type in self.variables:
                 f.write(f"   {name:<12} {var_type:<15}\n")
+            f.write(")\n\n")
+
+            f.write(".labels(\n")
+            for name, value in self.labels:
+                f.write(f"   {name:<12} {value:<15}\n")
             f.write(")\n\n")
 
             f.write(".code(\n")

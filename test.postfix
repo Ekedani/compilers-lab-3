@@ -16,6 +16,21 @@
    e            bool           
 )
 
+.labels(
+   L0           48             
+   L1           56             
+   L2           67             
+   L3           73             
+   L4           73             
+   L5           75             
+   L6           83             
+   L7           86             
+   L8           97             
+   L9           97             
+   L10          124            
+   L11          124            
+)
+
 .code(
    x            l-val          
    5            intnum         

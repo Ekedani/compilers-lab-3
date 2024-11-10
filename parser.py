@@ -705,5 +705,5 @@ if f_success == ('Lexer', True):
     postfix_generator.save_to_file('test.postfix')
 
     # print("Program code in postfix form:")
-    # formatted_table = [(i, item[0], item[1]) for i, item in enumerate(postfix_generator.get_postfix_code())]
-    # print(tabulate(formatted_table, headers=["№", "Element", "Type"], tablefmt="plain"))
+    formatted_table = [(i, item[0], item[1]) for i, item in enumerate(postfix_generator.get_postfix_code())]
+    print(tabulate(formatted_table, headers=["№", "Element", "Type"], tablefmt="plain"))
