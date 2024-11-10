@@ -1,7 +1,38 @@
-var a int = 5;
-var b int = 0;
+var x int = 5;
+var y float = 3.14;
+const Pi float = 3.1415;
+var testIntFloat float = 1;
+var isActive bool;
 func main() {
+    test := x + y;
+    index := -1;
+    isActive = true;
+    var a int;
+    scan(a);
+    print(a);
+    var g int = ((123 * (345 + 678)) + 11**(2+2)**3);
+    if a % 2 == 0 {
+        print(0, 2, 3);
+    } else {
+        print(1);
+    }
+    var NONE bool;
+    if (a % 2 == 1) print(12);
+    switch a {
+        case 1:
+            print(1);
+        case 2:
+            print(2);
+        default:
+            print(3);
+    }
     for (i := 1; i <= 5; i = i + 1) {
-    print(i);
+        print(i);
+    }
+    i = 5;
+    e := 5 < 2;
+    while i > 0 {
+        print(i);
+        i = i - 1;
     }
 }
