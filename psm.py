@@ -70,11 +70,11 @@ class PostfixStackMachine:
             print(f"File {self.filename} not found.")
 
     def parse_postfix_program(self):
-        self._parse_header(".target: Postfix Machine")
-        self._parse_header(".version: 0.2")
+        self._parse_header(".target: PSM")
+        self._parse_header(".version: 1.0")
         self._parse_section("VarDecl")
-        self._parse_section("LblDecl")
-        self._parse_section("ConstDecl")
+        # self._parse_section("LblDecl")
+        # self._parse_section("ConstDecl")
         self._parse_section("Code")
 
     def _parse_header(self, expected_header):
@@ -257,7 +257,7 @@ class PostfixStackMachine:
 
 if __name__ == '__main__':
     psm = PostfixStackMachine()
-    psm.load_postfix_file("test.postfix")
+    psm.load_postfix_file("test")
     print('Executing postfix code:')
     psm.execute_postfix()
     psm.display_tables()
