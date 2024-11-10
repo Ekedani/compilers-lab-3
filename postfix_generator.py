@@ -1,5 +1,6 @@
 class PostfixGenerator:
     def __init__(self):
+        self.variables = []
         self.postfix_code = []
         self.label_count = 0
 
@@ -24,3 +25,22 @@ class PostfixGenerator:
     def add_unconditional_jump(self, label):
         self.add_label(label)
         self.add_to_postfix(f'JMP', 'jump')
+
+    def set_variables(self, table_of_variables):
+        for name, (id_num, var_type, status) in table_of_variables.items():
+            self.variables.append((name, var_type))
+
+    def save_to_file(self, filename):
+        with open(filename, 'w') as f:
+            f.write(".target: PSM\n")
+            f.write(".version: 1.0\n\n")
+
+            f.write(".vars(\n")
+            for name, var_type in self.variables:
+                f.write(f"   {name:<12} {var_type:<15}\n")
+            f.write(")\n\n")
+
+            f.write(".code(\n")
+            for element in self.postfix_code:
+                f.write(f"   {element[0]:<12} {element[1]: <15}\n")
+            f.write(")\n")
