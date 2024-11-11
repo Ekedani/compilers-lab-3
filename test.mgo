@@ -4,17 +4,19 @@ const Pi float = 3.1415;
 var isActive bool;
 func main() {
     test := x + y;
-    index := 1;
+    index := -1;
     isActive = true;
     a := 6;
-    var g int = ((123 * (345 + 678)) + 11**(2+2)**3);
+    scan(a);
+    print(a);
+    var g int = ((123 * (2 + 678)) - 11**(2+2));
     if a - 2 == 0 {
         print(0, 2, 3);
     } else {
         print(1);
     }
     var NONE bool;
-    if (a % 2 == 1) print(12);
+    if (a % 2 == 0) print(12);
     switch a {
         case 1:
             print(1);
@@ -23,8 +25,8 @@ func main() {
         default:
             print(3);
     }
-    for (i := 1; i <= 5; i = i + 1) {
-        print(i);
+    for (i := 1; i < 42; i = i + 1) {
+        print(i**2);
     }
     i = 5;
     e := 5 < 2;

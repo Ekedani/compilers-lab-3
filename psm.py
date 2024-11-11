@@ -112,7 +112,7 @@ class PostfixStackMachine:
         key, value = tokens
         if section == "VarDecl":
             index = len(self.table_of_id) + 1
-            if value == 'bool' :
+            if value == 'bool':
                 value = 'boolval'
             self.table_of_id[key] = (index, value, 'val_undef')
             print(self.table_of_id[key])
@@ -144,7 +144,15 @@ class PostfixStackMachine:
                         value = self.table_of_id.get(lex, ('', '', 'Undefined'))[2]
                     else:
                         value = lex
-                    print(f'{value}')
+                    print(f'Output: {value}')
+                elif tok == 'in':
+                    lex, tok = self.stack.pop()
+                    self.instruction_pointer += 1
+                    expected_type = self.table_of_id.get(lex, ('', ''))[1]
+                    if not expected_type:
+                        raise PSMException(8)
+                    value = self._type_safe_scan(expected_type)
+                    self.table_of_id[lex] = (self.table_of_id[lex][0], expected_type, value)
                 else:
                     self._execute_operation(lex, tok)
                     self.instruction_pointer += 1
@@ -153,13 +161,23 @@ class PostfixStackMachine:
         except IndexError:
             print('Runtime Error: Stack underflow')
 
+    def _type_safe_scan(self, expected_type):
+        user_input = input(f"Enter a {expected_type} value: ")
+        try:
+            if expected_type == 'intnum':
+                return int(user_input)
+            elif expected_type == 'floatnum':
+                return float(user_input)
+            elif expected_type == 'boolval':
+                return user_input.lower() == 'true'
+
+        except ValueError:
+            raise PSMException(9)
+
     def _handle_jumps(self, tok):
         if tok == 'jump':
             label, _ = self.stack.pop()
             self.instruction_pointer = self.table_of_label.get(label, self.instruction_pointer)
-        elif tok == 'colon':
-            self.stack.pop()
-            self.instruction_pointer += 1
         elif tok == 'jf':
             label, _ = self.stack.pop()
             condition, _ = self.stack.pop()
@@ -170,26 +188,32 @@ class PostfixStackMachine:
 
     def _execute_operation(self, lex, tok):
         print(f'Executing operation: {lex} {tok}')
-        right_lex, right_tok = self.stack.pop()
-        left_lex, left_tok = self.stack.pop()
+        if tok == 'unary_op':
+            operand_lex, operand_tok = self.stack.pop()
+            print(f'Operand: {operand_lex}')
+            operand_value = get_value(operand_lex, operand_tok)
+            if lex == '-' and operand_tok in ('intnum', 'floatnum'):
+                result = -operand_value
+                result_type = operand_tok
+            else:
+                raise PSMException(9)
+            self.stack.append((str(result), result_type))
 
-        print(f'Left operand: {left_lex}, Righ operand: {right_lex}')
-        if (lex, tok) == ('=', 'assign_op'):
-            var_type = self.table_of_id[left_lex][1]
-            if var_type != right_tok:
-                if not(var_type == 'floatnum' and right_tok == 'intnum'):
-                    raise PSMException(7)
-            self.table_of_id[left_lex] = (
-                self.table_of_id[left_lex][0],
-                right_tok,
-                get_value(right_lex, right_tok)
-            )
         else:
-            self._process_arithmetic_or_boolean_op(
-                (left_lex, left_tok),
-                lex,
-                (right_lex, right_tok)
-            )
+            right_lex, right_tok = self.stack.pop()
+            left_lex, left_tok = self.stack.pop()
+            print(f'Left operand: {left_lex}, Right operand: {right_lex}')
+            if (lex, tok) == ('=', 'assign_op'):
+                var_type = self.table_of_id[left_lex][1]
+                if var_type != right_tok and not (var_type == 'floatnum' and right_tok == 'intnum'):
+                    raise PSMException(7)
+                self.table_of_id[left_lex] = (self.table_of_id[left_lex][0], right_tok, get_value(right_lex, right_tok))
+            else:
+                self._process_arithmetic_or_boolean_op(
+                    (left_lex, left_tok),
+                    lex,
+                    (right_lex, right_tok)
+                )
 
     def _process_arithmetic_or_boolean_op(self, left, operator, right):
         left_type, left_value = self._get_operand_value(*left)
@@ -228,6 +252,8 @@ class PostfixStackMachine:
             elif operator == '**':
                 result = left_value ** right_value
             elif operator == '%':
+                if right_value == 0:
+                    raise PSMException(10)
                 result = left_value % right_value
             elif operator == '/':
                 if right_value == 0:
