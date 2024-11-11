@@ -1,17 +1,14 @@
 var x int = 5;
-var y float = 3.14;
+var y int = 37;
 const Pi float = 3.1415;
-var testIntFloat float = 1;
 var isActive bool;
 func main() {
     test := x + y;
-    index := -1;
+    index := 1;
     isActive = true;
-    var a int;
-    scan(a);
-    print(a);
+    a := 6;
     var g int = ((123 * (345 + 678)) + 11**(2+2)**3);
-    if a % 2 == 0 {
+    if a - 2 == 0 {
         print(0, 2, 3);
     } else {
         print(1);

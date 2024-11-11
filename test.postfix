@@ -3,11 +3,10 @@
 
 .vars(
    x            intnum         
-   y            floatnum       
+   y            intnum         
    Pi           floatnum       
-   testIntFloat floatnum       
    isActive     bool           
-   test         floatnum       
+   test         intnum         
    index        intnum         
    a            intnum         
    g            intnum         
@@ -17,18 +16,18 @@
 )
 
 .labels(
-   L0           58             
-   L1           61             
-   L2           71             
-   L4           77             
-   L5           82             
-   L6           88             
-   L7           93             
-   L3           96             
-   L8           100            
-   L9           115            
-   L10          124            
-   L11          139            
+   L0           53             
+   L1           56             
+   L2           66             
+   L4           72             
+   L5           77             
+   L6           83             
+   L7           88             
+   L3           91             
+   L8           95             
+   L9           110            
+   L10          119            
+   L11          134            
 )
 
 .code(
@@ -36,13 +35,10 @@
    5            intnum         
    =            assign_op      
    y            l-val          
-   3.14         floatnum       
+   37           intnum         
    =            assign_op      
    Pi           l-val          
    3.1415       floatnum       
-   =            assign_op      
-   testIntFloat l-val          
-   1            intnum         
    =            assign_op      
    test         l-val          
    x            r-val          
@@ -51,15 +47,13 @@
    =            assign_op      
    index        l-val          
    1            intnum         
-   -            unary_op       
    =            assign_op      
    isActive     l-val          
    true         boolval        
    =            assign_op      
-   a            r-val          
-   IN           in             
-   a            r-val          
-   OUT          out            
+   a            l-val          
+   6            intnum         
+   =            assign_op      
    g            l-val          
    123          intnum         
    345          intnum         
@@ -77,7 +71,7 @@
    =            assign_op      
    a            r-val          
    2            intnum         
-   %            mult_op        
+   -            add_op         
    0            intnum         
    ==           rel_op         
    L0           label          

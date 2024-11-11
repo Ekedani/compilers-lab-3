@@ -18,11 +18,11 @@ def f2i(float_val):
 
 
 def get_value(lex, tok):
-    if tok == 'float':
+    if tok == 'floatnum':
         return float(lex)
-    elif tok == 'int':
+    elif tok == 'intnum':
         return int(lex)
-    elif tok == 'bool':
+    elif tok == 'boolval':
         return lex.lower() == 'true'
     else:
         return lex
@@ -112,7 +112,10 @@ class PostfixStackMachine:
         key, value = tokens
         if section == "VarDecl":
             index = len(self.table_of_id) + 1
+            if value == 'bool' :
+                value = 'boolval'
             self.table_of_id[key] = (index, value, 'val_undef')
+            print(self.table_of_id[key])
         elif section == "LblDecl":
             self.table_of_label[key] = int(value)
         elif section == "ConstDecl":
@@ -129,12 +132,12 @@ class PostfixStackMachine:
         try:
             while self.instruction_pointer < self.max_instructions:
                 lex, tok = self.postfix_code[self.instruction_pointer]
-                if tok in ('int', 'float', 'l-val', 'r-val', 'label', 'bool'):
+                if tok in ('intnum', 'floatnum', 'l-val', 'r-val', 'label', 'boolval'):
                     self.stack.append((lex, tok))
                     self.instruction_pointer += 1
                 elif tok in ('jump', 'jf', 'colon'):
                     self._handle_jumps(tok)
-                elif tok == 'out_op':
+                elif tok == 'out':
                     identifier, _ = self.stack.pop()
                     self.instruction_pointer += 1
                     value = self.table_of_id.get(identifier, ('', '', 'Undefined'))[2]
@@ -163,13 +166,16 @@ class PostfixStackMachine:
                 self.instruction_pointer += 1
 
     def _execute_operation(self, lex, tok):
+        print(f'Executing operation: {lex} {tok}')
         right_lex, right_tok = self.stack.pop()
         left_lex, left_tok = self.stack.pop()
 
-        if (lex, tok) == (':=', 'assign_op'):
+        print(f'Left operand: {left_lex}, Righ operand: {right_lex}')
+        if (lex, tok) == ('=', 'assign_op'):
             var_type = self.table_of_id[left_lex][1]
             if var_type != right_tok:
-                raise PSMException(7)
+                if not(var_type == 'floatnum' and right_tok == 'intnum'):
+                    raise PSMException(7)
             self.table_of_id[left_lex] = (
                 self.table_of_id[left_lex][0],
                 right_tok,
@@ -216,16 +222,20 @@ class PostfixStackMachine:
                 result = left_value - right_value
             elif operator == '*':
                 result = left_value * right_value
+            elif operator == '**':
+                result = left_value ** right_value
+            elif operator == '%':
+                result = left_value % right_value
             elif operator == '/':
                 if right_value == 0:
                     raise PSMException(10)
-                if result_type == 'float':
+                if result_type == 'floatnum':
                     result = left_value / right_value
                 else:
                     result = f2i(left_value / right_value)
-            elif operator in ('<', '<=', '>', '>=', '=', '<>'):
-                result = str(eval(f'{left_value} {operator.replace("=", "==").replace("<>", "!=")} {right_value}')).lower()
-                result_type = 'bool'
+            elif operator in ('<', '<=', '>', '>=', '==', '!='):
+                result = str(eval(f'{left_value} {operator} {right_value}')).lower()
+                result_type = 'boolval'
             else:
                 raise PSMException(f'Unknown operator {operator}')
         except ZeroDivisionError:
