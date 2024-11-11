@@ -138,10 +138,13 @@ class PostfixStackMachine:
                 elif tok in ('jump', 'jf', 'colon'):
                     self._handle_jumps(tok)
                 elif tok == 'out':
-                    identifier, _ = self.stack.pop()
+                    lex, tok = self.stack.pop()
                     self.instruction_pointer += 1
-                    value = self.table_of_id.get(identifier, ('', '', 'Undefined'))[2]
-                    print(f'{identifier} = {value}')
+                    if tok == 'r-val':
+                        value = self.table_of_id.get(lex, ('', '', 'Undefined'))[2]
+                    else:
+                        value = lex
+                    print(f'{value}')
                 else:
                     self._execute_operation(lex, tok)
                     self.instruction_pointer += 1
