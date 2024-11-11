@@ -1,3 +1,6 @@
+from tabulate import tabulate
+
+
 class PSMException(Exception):
     def __init__(self, msg):
         self.msg = msg
@@ -74,7 +77,7 @@ class PostfixStackMachine:
         self._parse_header(".version: 1.0")
         self._parse_section("VarDecl")
         self._parse_section("LblDecl")
-        # self._parse_section("ConstDecl")
+        self._parse_section("ConstDecl")
         self._parse_section("Code")
 
     def _parse_header(self, expected_header):
@@ -272,26 +275,33 @@ class PostfixStackMachine:
 
         self.stack.append((str(result), result_type))
 
+    from tabulate import tabulate
+
     def display_tables(self):
-        print("\nIdentifier Table:")
-        for key, value in self.table_of_id.items():
-            print(f'  {key}: {value}')
+        if self.table_of_id:
+            print("\nIdentifier Table:")
+            id_table = [[key] + list(value) for key, value in self.table_of_id.items()]
+            print(tabulate(id_table, headers=["Identifier", "Index", "Type", "Value"], tablefmt="plain"))
 
-        print("\nLabel Table:")
-        for key, value in self.table_of_label.items():
-            print(f'  {key}: {value}')
+        if self.table_of_label:
+            print("\nLabel Table:")
+            label_table = [[key, value] for key, value in self.table_of_label.items()]
+            print(tabulate(label_table, headers=["Label", "Value"], tablefmt="plain"))
 
-        print("\nConstant Table:")
-        for key, value in self.table_of_const.items():
-            print(f'  {key}: {value}')
+        if self.table_of_const:
+            print("\nConstant Table:")
+            const_table = [[key] + list(value) for key, value in self.table_of_const.items()]
+            print(tabulate(const_table, headers=["Constant", "Index", "Type", "Value"], tablefmt="plain"))
 
-        print("\nPostfix Code:")
-        for index, code in enumerate(self.postfix_code):
-            print(f'  {index}: {code}')
+        if self.postfix_code:
+            print("\nPostfix Code:")
+            code_table = [[index, *code] for index, code in enumerate(self.postfix_code)]
+            print(tabulate(code_table, headers=["#", "Lexeme", "Token"], tablefmt="plain"))
 
-        print("\nDebug Map (Instruction Number to Line Number):")
-        for instr_num, line_num in self.debug_map.items():
-            print(f'  Instruction {instr_num}: Line {line_num}')
+        if self.debug_map:
+            print("\nDebug Map (Instruction Number to Line Number):")
+            debug_table = [[instr_num, line_num] for instr_num, line_num in self.debug_map.items()]
+            print(tabulate(debug_table, headers=["#", "Line #"], tablefmt="plain2"))
 
 
 if __name__ == '__main__':

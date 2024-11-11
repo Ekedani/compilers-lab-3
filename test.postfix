@@ -30,6 +30,23 @@
    L11          139            
 )
 
+.constants(
+   5            intnum         
+   42           intnum         
+   678          intnum         
+   12           intnum         
+   1            intnum         
+   37           intnum         
+   11           intnum         
+   true         boolval        
+   6            intnum         
+   0            intnum         
+   2            intnum         
+   3.1415       floatnum       
+   3            intnum         
+   123          intnum         
+)
+
 .code(
    x            l-val          
    5            intnum         

@@ -3,10 +3,13 @@ class PostfixGenerator:
         self.variables = []
         self.labels = []
         self.postfix_code = []
+        self.constants = set()
         self.label_count = 0
 
     def add_to_postfix(self, element, token_type):
         self.postfix_code.append((element, token_type))
+        if token_type in ('intnum', 'floatnum', 'boolval'):
+            self.constants.add((element, token_type))
 
     def new_label(self):
         label = f"L{self.label_count}"
@@ -45,6 +48,11 @@ class PostfixGenerator:
             f.write(".labels(\n")
             for name, value in self.labels:
                 f.write(f"   {name:<12} {value:<15}\n")
+            f.write(")\n\n")
+
+            f.write(".constants(\n")
+            for value, const_type in self.constants:
+                f.write(f"   {value:<12} {const_type:<15}\n")
             f.write(")\n\n")
 
             f.write(".code(\n")
