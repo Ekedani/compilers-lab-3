@@ -1,3 +1,6 @@
+import os
+
+
 def map_type_to_cil(var_type):
     type_map = {
         "intnum": "int32",
@@ -42,28 +45,30 @@ class CILGenerator:
         self.constants.add((value, cil_type))
 
     def save_to_file(self, filename):
+        base_filename = os.path.splitext(os.path.basename(filename))[0]
         with open(filename, 'w') as f:
             f.write(".assembly extern mscorlib\n{\n")
             f.write("  .publickeytoken = (B7 7A 5C 56 19 34 E0 89)\n")
             f.write("  .ver 4:0:0:0\n}\n\n")
-            f.write(".assembly test\n{\n")
+            f.write(f".assembly {base_filename}\n{{\n")
             f.write("  .hash algorithm 0x00008004\n")
             f.write("  .ver 0:0:0:0\n}\n\n")
-            f.write(".module test.exe\n\n")
+            f.write(f".module {base_filename}.exe\n\n")
             f.write(".class private auto ansi beforefieldinit Program\n")
             f.write("  extends [mscorlib]System.Object\n{\n")
             f.write("    .method private hidebysig static void Main(string[] args) cil managed\n")
             f.write("    {\n")
             f.write("        .entrypoint\n")
+
             f.write("        .locals init (\n")
-            for name, cil_type in self.variables:
-                f.write(f"            {cil_type} {name},\n")
-            f.seek(f.tell() - 2, 0)
+            variables_str = ",\n".join([f"            {cil_type} {name}" for name, cil_type in self.variables])
+            f.write(variables_str)
             f.write("\n        )\n\n")
+
             for value, cil_type in self.constants:
                 f.write(f"        // {value} ({cil_type})\n")
             for line in self.cil_code:
-                f.write(f"{line}\n")
+                f.write(f"            {line}\n")
             f.write("        ret\n")
             f.write("    }\n")
             f.write("}\n")

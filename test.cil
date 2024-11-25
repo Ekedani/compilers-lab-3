@@ -28,7 +28,7 @@
             int32 g,
             bool NONE,
             int32 i,
-            bool e,
+            bool e
         )
 
         ret
