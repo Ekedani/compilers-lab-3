@@ -19,55 +19,18 @@
     {
         .entrypoint
         .locals init (
-            int x,
-            int y,
+            int32 x,
+            int32 y,
             bool isActive,
-            int g,
+            int32 test,
+            int32 index,
+            int32 a,
+            int32 g,
             bool NONE,
+            int32 i,
+            bool e,
         )
 
-        // Constants
-
-        // Code
-    ldloc x
-    stloc x
-    ldloc y
-    stloc y
-    ldloc test
-    stloc test
-    ldloc index
-    stloc index
-    ldloc isActive
-    stloc isActive
-    ldloc a
-    stloc a
-    call string [mscorlib]System.Console::ReadLine()
-    stloc a
-    call void [mscorlib]System.Console::WriteLine(string)
-    ldloc g
-    stloc g
-    brfalse L0
-    call void [mscorlib]System.Console::WriteLine(string)
-    br L1
-L0:
-    call void [mscorlib]System.Console::WriteLine(string)
-L1:
-    brfalse L2
-    call void [mscorlib]System.Console::WriteLine(string)
-L2:
-    call void [mscorlib]System.Console::WriteLine(string)
-    call void [mscorlib]System.Console::WriteLine(string)
-    call void [mscorlib]System.Console::WriteLine(string)
-    ldloc i
-    stloc i
-    call void [mscorlib]System.Console::WriteLine(string)
-    ldloc i
-    stloc i
-    ldloc e
-    stloc e
-    call void [mscorlib]System.Console::WriteLine(string)
-    ldloc i
-    stloc i
         ret
     }
 }
