@@ -31,18 +31,18 @@
 
 .constants(
    3            intnum         
-   0            intnum         
-   42           intnum         
-   678          intnum         
-   1            intnum         
-   37           intnum         
-   true         boolval        
-   11           intnum         
    6            intnum         
-   123          intnum         
-   2            intnum         
    5            intnum         
+   2            intnum         
+   true         boolval        
+   42           intnum         
    12           intnum         
+   678          intnum         
+   37           intnum         
+   123          intnum         
+   11           intnum         
+   0            intnum         
+   1            intnum         
 )
 
 .code(

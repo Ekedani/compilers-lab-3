@@ -60,10 +60,8 @@ class CILGenerator:
                 f.write(f"            {cil_type} {name},\n")
             f.seek(f.tell() - 2, 0)
             f.write("\n        )\n\n")
-            f.write("        // Constants\n")
             for value, cil_type in self.constants:
                 f.write(f"        // {value} ({cil_type})\n")
-            f.write("\n        // Code\n")
             for line in self.cil_code:
                 f.write(f"{line}\n")
             f.write("        ret\n")

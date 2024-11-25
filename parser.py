@@ -1,3 +1,4 @@
+from cil_generator import CILGenerator
 from lexer import lex
 from lexer import table_of_symbols
 from postfix_generator import PostfixGenerator
@@ -14,7 +15,8 @@ num_row = 1  # Номер поточної лексеми
 len_table_of_symbols = len(table_of_symbols)  # Довжина таблиці лексем
 indent_step = 2  # Крок відступу для виводу
 current_indent = 0  # Розмір поточного відступу
-postfix_generator = PostfixGenerator()  # Ініціалізація генератора постфіксного коду
+postfix_generator = PostfixGenerator()
+cil_generator = CILGenerator()
 
 
 @contextlib.contextmanager
@@ -701,8 +703,11 @@ def get_type_op(l_type, op, r_type):
 if f_success == ('Lexer', True):
     print(('len_table_of_symbols', len_table_of_symbols))
     run_parser()
+
     postfix_generator.set_variables(table_of_variables)
+    cil_generator.set_variables(table_of_variables)
     postfix_generator.save_to_file('test.postfix')
+    cil_generator.save_to_file('test.cil')
 
     # print("Program code in postfix form:")
     formatted_table = [(i, item[0], item[1]) for i, item in enumerate(postfix_generator.get_postfix_code())]
