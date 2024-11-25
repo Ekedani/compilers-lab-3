@@ -4,7 +4,6 @@
 .vars(
    x            intnum         
    y            intnum         
-   Pi           floatnum       
    isActive     bool           
    test         intnum         
    index        intnum         
@@ -16,35 +15,34 @@
 )
 
 .labels(
-   L0           56             
-   L1           59             
-   L2           69             
-   L4           75             
-   L5           80             
-   L6           86             
-   L7           91             
-   L3           94             
-   L8           98             
-   L9           115            
-   L10          124            
-   L11          139            
+   L0           53             
+   L1           56             
+   L2           66             
+   L4           72             
+   L5           77             
+   L6           83             
+   L7           88             
+   L3           91             
+   L8           95             
+   L9           112            
+   L10          121            
+   L11          136            
 )
 
 .constants(
-   5            intnum         
+   3            intnum         
+   0            intnum         
    42           intnum         
    678          intnum         
-   12           intnum         
    1            intnum         
    37           intnum         
-   11           intnum         
    true         boolval        
+   11           intnum         
    6            intnum         
-   0            intnum         
-   2            intnum         
-   3.1415       floatnum       
-   3            intnum         
    123          intnum         
+   2            intnum         
+   5            intnum         
+   12           intnum         
 )
 
 .code(
@@ -53,9 +51,6 @@
    =            assign_op      
    y            l-val          
    37           intnum         
-   =            assign_op      
-   Pi           l-val          
-   3.1415       floatnum       
    =            assign_op      
    test         l-val          
    x            r-val          

@@ -1,6 +1,5 @@
 var x int = 5;
 var y int = 37;
-const Pi float = 3.1415;
 var isActive bool;
 func main() {
     test := x + y;
