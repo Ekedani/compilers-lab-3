@@ -76,7 +76,7 @@ class CILGenerator:
             f.write("    }\n")
             f.write("}\n")
 
-    def perform_operation(self, op):
+    def perform_binary_operation(self, op):
         op_map = {
             '+': 'add',
             '-': 'sub',
@@ -158,11 +158,11 @@ class CILGenerator:
     def add_conversion_to_float(self):
         self.add_to_cil('conv.r8')
 
-    def get_code_len(self):
+    def get_current_position(self):
         return len(self.cil_code)
 
-    def insert_at_index(self, index, instruction):
-        self.cil_code.insert(index, instruction)
+    def insert_instruction_at(self, position, instruction, *args):
+        self.cil_code.insert(position, f"    {instruction} {' '.join(map(str, args))}")
 
-    def insert_conversion_to_float(self, index):
-        self.insert_at_index(index, 'conv.r8')
+    def insert_conversion_to_float_at(self, position):
+        self.insert_instruction_at(position, 'conv.r8')

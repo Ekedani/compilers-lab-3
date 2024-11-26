@@ -2,7 +2,6 @@ from cil_generator import CILGenerator
 from lexer import lex
 from lexer import table_of_symbols
 from postfix_generator import PostfixGenerator
-from tabulate import tabulate
 import contextlib
 
 f_success = lex()
@@ -532,13 +531,22 @@ def parse_arithm_expression():
             if tok == 'add_op':
                 print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
                 parse_token(lexeme, tok)
+
+                cil_code_pointer = cil_generator.get_current_position()
                 term_type = parse_term()
-                postfix_generator.add_to_postfix(lexeme, 'add_op')
-                cil_generator.perform_operation(lexeme)
+
+                if expr_type == 'intnum' and term_type == 'floatnum':
+                    cil_generator.insert_conversion_to_float_at(cil_code_pointer)
+                elif expr_type == 'floatnum' and term_type == 'intnum':
+                    cil_generator.add_conversion_to_float()
+
                 result_type = get_type_op(expr_type, lexeme, term_type)
                 if result_type == 'type_error':
                     fail_parse('Несумісні типи в арифметичній операції', (expr_type, lexeme, term_type))
                 expr_type = result_type
+
+                postfix_generator.add_to_postfix(lexeme, 'add_op')
+                cil_generator.perform_binary_operation(lexeme)
             else:
                 break
         return expr_type
@@ -560,7 +568,7 @@ def parse_term():
                 parse_token(lexeme, tok)
                 factor_type = parse_factor()
                 postfix_generator.add_to_postfix(lexeme, 'mult_op')
-                cil_generator.perform_operation(lexeme)
+                cil_generator.perform_binary_operation(lexeme)
                 result_type = get_type_op(term_type, lexeme, factor_type)
                 if result_type == 'type_error':
                     fail_parse('Несумісні типи в множенні/діленні', (term_type, lexeme, factor_type))
@@ -591,7 +599,7 @@ def parse_factor():
                 cil_generator.add_conversion_to_float()
 
             postfix_generator.add_to_postfix(lexeme, 'power_op')
-            cil_generator.perform_operation(lexeme)
+            cil_generator.perform_binary_operation(lexeme)
             result_type = get_type_op(factor_type, lexeme, primary_type)
             if result_type == 'type_error':
                 fail_parse('Несумісні типи в операції піднесення до степеня', (factor_type, lexeme, primary_type))
@@ -742,6 +750,8 @@ def get_type_op(l_type, op, r_type):
                 return 'intnum'
             else:
                 return 'floatnum'
+        if op == '**':
+            return 'floatnum'
         if l_type == 'floatnum' or r_type == 'floatnum':
             return 'floatnum'
         return 'intnum'
@@ -762,7 +772,3 @@ if f_success == ('Lexer', True):
     cil_generator.set_variables(table_of_variables)
     postfix_generator.save_to_file('test.postfix')
     cil_generator.save_to_file('test.cil')
-
-    # print("Program code in postfix form:")
-    formatted_table = [(i, item[0], item[1]) for i, item in enumerate(postfix_generator.get_postfix_code())]
-    print(tabulate(formatted_table, headers=["№", "Element", "Type"], tablefmt="plain"))
