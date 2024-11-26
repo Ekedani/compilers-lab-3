@@ -470,13 +470,11 @@ def parse_input_identifier_list():
         identifiers = [parse_identifier()]
         postfix_generator.add_to_postfix(identifiers[-1], 'r-val')
         postfix_generator.add_to_postfix('IN', 'in')
-        cil_generator.read_input(identifiers[-1], get_type_var(identifiers[-1]))
         while check_current_token(','):
             parse_token(',', 'punct')
             identifiers.append(parse_identifier())
             postfix_generator.add_to_postfix(identifiers[-1], 'l-val')
             postfix_generator.add_to_postfix('IN', 'in')
-            cil_generator.read_input(identifiers[-1], get_type_var(identifiers[-1]))
         return identifiers
 
 
@@ -582,9 +580,16 @@ def parse_factor():
 
         num_line, lexeme, tok = get_symbol()
         if tok == 'power_op':
+            if factor_type == "intnum":
+                cil_generator.add_conversion_to_float()
+
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
+
             primary_type = parse_factor()
+            if primary_type == "intnum":
+                cil_generator.add_conversion_to_float()
+
             postfix_generator.add_to_postfix(lexeme, 'power_op')
             cil_generator.perform_operation(lexeme)
             result_type = get_type_op(factor_type, lexeme, primary_type)

@@ -60,10 +60,13 @@ class CILGenerator:
             f.write("    {\n")
             f.write("        .entrypoint\n")
 
-            f.write("        .locals init (\n")
-            variables_str = ",\n".join([f"            {cil_type} {name}" for name, cil_type in self.variables])
-            f.write(variables_str)
-            f.write("\n        )\n\n")
+            f.write("        .locals (\n")
+            for idx, (name, cil_type) in enumerate(self.variables):
+                if idx == len(self.variables) - 1:
+                    f.write(f"           [{idx}] {cil_type} {name}\n")
+                else:
+                    f.write(f"           [{idx}] {cil_type} {name},\n")
+            f.write("        )\n\n")
 
             for value, cil_type in self.constants:
                 f.write(f"    // {value} ({cil_type})\n")
@@ -83,10 +86,6 @@ class CILGenerator:
             '**': 'call float64 [mscorlib]System.Math::Pow(float64, float64)',
         }
         cil_op = op_map.get(op)
-        if op == '**':
-            self.add_to_cil('conv.r8')
-            self.add_to_cil('conv.r8')
-            self.add_to_cil('swap')
         self.add_to_cil(cil_op)
 
     def perform_unary_operation(self, op):
@@ -101,8 +100,8 @@ class CILGenerator:
             '!=': ('ceq', 'ldc.i4.0', 'ceq'),
             '<': 'clt',
             '>': 'cgt',
-            '<=': ('cgt', 'ldc.i4.0', 'ceq'),
-            '>=': ('clt', 'ldc.i4.0', 'ceq'),
+            '<=': ('clt', 'ldc.i4.0', 'ceq'),
+            '>=': ('cgt', 'ldc.i4.0', 'ceq'),
         }
         cil_ops = op_map.get(op)
         if isinstance(cil_ops, tuple):
@@ -116,9 +115,10 @@ class CILGenerator:
         self.add_to_cil('call', 'string [mscorlib]System.Console::ReadLine()')
         if var_type == 'int32':
             self.add_to_cil('call', 'int32 [mscorlib]System.Int32::Parse(string)')
+            self.add_to_cil('stloc', var_name)
         elif var_type == 'float64':
             self.add_to_cil('call', 'float64 [mscorlib]System.Double::Parse(string)')
-        self.add_to_cil('stloc', var_name)
+            self.add_to_cil('stloc', var_name)
 
     def write_output(self, var_type):
         var_type = map_type_to_cil(var_type)
@@ -132,15 +132,11 @@ class CILGenerator:
             self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(bool)')
         else:
             self.add_to_cil('callvirt', 'instance string [mscorlib]System.Object::ToString()')
-            self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(string)')
 
     def load_constant(self, value, var_type):
         cil_type = map_type_to_cil(var_type)
         if cil_type == 'int32':
-            if -128 <= int(value) <= 127:
-                self.add_to_cil(f'ldc.i4.s {value}')
-            else:
-                self.add_to_cil(f'ldc.i4 {value}')
+            self.add_to_cil(f'ldc.i4 {value}')
         elif cil_type == 'float64':
             self.add_to_cil(f'ldc.r8 {value}')
         elif cil_type == 'bool':
@@ -158,3 +154,15 @@ class CILGenerator:
             if name == var_name:
                 return cil_type
         return None
+
+    def add_conversion_to_float(self):
+        self.add_to_cil('conv.r8')
+
+    def get_code_len(self):
+        return len(self.cil_code)
+
+    def insert_at_index(self, index, instruction):
+        self.cil_code.insert(index, instruction)
+
+    def insert_conversion_to_float(self, index):
+        self.insert_at_index(index, 'conv.r8')

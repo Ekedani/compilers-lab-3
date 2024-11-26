@@ -15,34 +15,34 @@
 )
 
 .labels(
-   L0           53             
-   L1           56             
-   L2           66             
-   L4           72             
-   L5           77             
-   L6           83             
-   L7           88             
-   L3           91             
-   L8           95             
-   L9           112            
-   L10          121            
-   L11          136            
+   L0           55             
+   L1           58             
+   L2           68             
+   L4           74             
+   L5           79             
+   L6           85             
+   L7           90             
+   L3           93             
+   L8           97             
+   L9           114            
+   L10          123            
+   L11          138            
 )
 
 .constants(
-   6            intnum         
-   37           intnum         
-   3            intnum         
-   1            intnum         
-   5            intnum         
+   123          intnum         
    678          intnum         
    0            intnum         
-   2            intnum         
-   12           intnum         
-   123          intnum         
    42           intnum         
+   12           intnum         
+   1            intnum         
+   3            intnum         
+   37           intnum         
+   2            intnum         
    true         boolval        
    11           intnum         
+   5            intnum         
+   6            intnum         
 )
 
 .code(
@@ -84,6 +84,8 @@
    **           power_op       
    -            add_op         
    =            assign_op      
+   g            r-val          
+   OUT          out            
    a            r-val          
    2            intnum         
    -            add_op         

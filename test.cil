@@ -18,137 +18,134 @@
     .method private hidebysig static void Main(string[] args) cil managed
     {
         .entrypoint
-        .locals init (
-            int32 x,
-            int32 y,
-            bool isActive,
-            int32 test,
-            int32 index,
-            int32 a,
-            float64 g,
-            bool NONE,
-            int32 i,
-            bool e
+        .locals (
+           [0] int32 x,
+           [1] int32 y,
+           [2] bool isActive,
+           [3] int32 test,
+           [4] int32 index,
+           [5] int32 a,
+           [6] float64 g,
+           [7] bool NONE,
+           [8] int32 i,
+           [9] bool e
         )
 
-        ldc.i4.s 5
+        ldc.i4 5 
         stloc x
-        ldc.i4.s 37
+        ldc.i4 37 
         stloc y
         ldloc x
         ldloc y
-        add
+        add 
         stloc test
-        ldc.i4.s 1
-        neg
+        ldc.i4 1 
+        neg 
         stloc index
         ldc.i4 1
         stloc isActive
-        ldc.i4.s 6
-        stloc a
-        call string [mscorlib]System.Console::ReadLine()
-        call int32 [mscorlib]System.Int32::Parse(string)
+        ldc.i4 6 
         stloc a
         call string [mscorlib]System.Console::ReadLine()
         call int32 [mscorlib]System.Int32::Parse(string)
         stloc a
         ldloc a
         call void [mscorlib]System.Console::WriteLine(int32)
-        ldc.i4.s 123
-        ldc.i4.s 2
-        ldc.i4 678
-        add
-        mul
-        ldc.i4.s 11
-        ldc.i4.s 2
-        ldc.i4.s 2
-        add
-        conv.r8
-        conv.r8
-        swap
-        call float64 [mscorlib]System.Math::Pow(float64, float64)
-        sub
+        ldc.i4 123 
+        ldc.i4 2 
+        ldc.i4 678 
+        add 
+        mul 
+        ldc.i4 11 
+        conv.r8 
+        ldc.i4 2 
+        ldc.i4 2 
+        add 
+        conv.r8 
+        call float64 [mscorlib]System.Math::Pow(float64, float64) 
+        sub 
         stloc g
+        ldloc g
+        call void [mscorlib]System.Console::WriteLine(float64)
         ldloc a
-        ldc.i4.s 2
-        sub
-        ldc.i4.s 0
-        ceq
+        ldc.i4 2 
+        sub 
+        ldc.i4 0 
+        ceq 
         brfalse L0
-        ldc.i4.s 0
+        ldc.i4 0 
         call void [mscorlib]System.Console::WriteLine(int32)
-        ldc.i4.s 2
+        ldc.i4 2 
         call void [mscorlib]System.Console::WriteLine(int32)
-        ldc.i4.s 3
+        ldc.i4 3 
         call void [mscorlib]System.Console::WriteLine(int32)
         br L1
     L0:
-        ldc.i4.s 1
+        ldc.i4 1 
         call void [mscorlib]System.Console::WriteLine(int32)
     L1:
         ldloc a
-        ldc.i4.s 2
-        rem
-        ldc.i4.s 0
-        ceq
+        ldc.i4 2 
+        rem 
+        ldc.i4 0 
+        ceq 
         brfalse L2
-        ldc.i4.s 12
+        ldc.i4 12 
         call void [mscorlib]System.Console::WriteLine(int32)
     L2:
         ldloc a
-        ldc.i4.s 1
+        ldc.i4 1 
         brfalse L5
     L4:
-        ldc.i4.s 1
+        ldc.i4 1 
         call void [mscorlib]System.Console::WriteLine(int32)
         br L3
     L5:
-        ldc.i4.s 2
+        ldc.i4 2 
         brfalse L7
     L6:
-        ldc.i4.s 2
+        ldc.i4 2 
         call void [mscorlib]System.Console::WriteLine(int32)
         br L3
     L7:
-        ldc.i4.s 3
+        ldc.i4 3 
         call void [mscorlib]System.Console::WriteLine(int32)
     L3:
-        ldc.i4.s 1
+        ldc.i4 1 
         stloc i
     L8:
         ldloc i
-        ldc.i4.s 42
-        clt
+        ldc.i4 42 
+        clt 
         brfalse L9
         ldloc i
-        ldc.i4.s 1
-        add
+        ldc.i4 1 
+        add 
         stloc i
         ldloc i
-        ldc.i4.s 2
-        conv.r8
-        conv.r8
-        swap
-        call float64 [mscorlib]System.Math::Pow(float64, float64)
+        conv.r8 
+        ldc.i4 2 
+        conv.r8 
+        call float64 [mscorlib]System.Math::Pow(float64, float64) 
         call void [mscorlib]System.Console::WriteLine(int32)
         br L8
     L9:
-        ldc.i4.s 5
+        ldc.i4 5 
         stloc i
-        ldc.i4.s 5
-        ldc.i4.s 2
-        clt
+        ldc.i4 5 
+        ldc.i4 2 
+        clt 
         stloc e
     L10:
         ldloc i
-        ldc.i4.s 0
-        cgt
+        ldc.i4 0 
+        cgt 
         brfalse L11
         ldloc i
         call void [mscorlib]System.Console::WriteLine(int32)
         ldloc i
-        ldc.i4.s 1
-        sub
+        ldc.i4 1 
+        sub 
         stloc i
         br L10
     L11:
