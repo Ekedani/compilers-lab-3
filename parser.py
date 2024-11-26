@@ -253,7 +253,7 @@ def parse_input_stmt():
 
         for ident in identifiers:
             initialize_variable(ident)
-            cil_generator.read_input(ident)
+            cil_generator.read_input(ident, get_type_var(ident))
 
 
 def check_current_token(expected_lexeme):
@@ -315,16 +315,16 @@ def parse_while_stmt():
         label_end = postfix_generator.new_label()
         cil_label_start = cil_generator.new_label()
         cil_label_end = cil_generator.new_label()
-
         postfix_generator.add_label(label_start)
         cil_generator.add_label(cil_label_start)
         parse_token('while', 'keyword')
-        parse_expression()
-
+        expr_type = parse_expression()
+        if expr_type != 'bool':
+            cil_generator.add_to_cil('ldc.i4.0')
+            cil_generator.perform_relational_operation('!=')
         postfix_generator.add_conditional_jump(label_end)
         cil_generator.add_conditional_jump(cil_label_end)
         parse_do_block()
-
         postfix_generator.add_unconditional_jump(label_start)
         cil_generator.add_unconditional_jump(cil_label_start)
         postfix_generator.add_label(label_end)
@@ -339,21 +339,22 @@ def parse_if_stmt():
     print(get_indent() + 'parse_if_stmt():')
     with indent_manager():
         parse_token('if', 'keyword')
-        parse_expression()
+        expr_type = parse_expression()
+        if expr_type != 'bool':
+            cil_generator.add_to_cil('ldc.i4.0')
+            cil_generator.perform_relational_operation('!=')
         label_else = postfix_generator.new_label()
         cil_label_else = cil_generator.new_label()
-
         postfix_generator.add_conditional_jump(label_else)
         cil_generator.add_conditional_jump(cil_label_else)
         parse_do_block()
         if check_current_token('else'):
             label_end = postfix_generator.new_label()
-            postfix_generator.add_unconditional_jump(label_end)  # Перехід після блоку if
+            postfix_generator.add_unconditional_jump(label_end)
             cil_label_end = cil_generator.new_label()
             cil_generator.add_unconditional_jump(cil_label_end)
             postfix_generator.add_label(label_else)
             cil_generator.add_label(cil_label_else)
-
             parse_token('else', 'keyword')
             parse_do_block()
             postfix_generator.add_label(label_end)
@@ -453,14 +454,14 @@ def parse_do_block():
 def parse_output_expression_list():
     print(get_indent() + 'parse_output_expression_list():')
     with indent_manager():
-        parse_expression()
+        expr_type = parse_expression()
         postfix_generator.add_to_postfix('OUT', 'out')
-        cil_generator.write_output()
+        cil_generator.write_output(expr_type)
         while check_current_token(','):
             parse_token(',', 'punct')
-            parse_expression()
+            expr_type = parse_expression()
             postfix_generator.add_to_postfix('OUT', 'out')
-            cil_generator.write_output()
+            cil_generator.write_output(expr_type)
 
 
 def parse_input_identifier_list():
@@ -469,13 +470,13 @@ def parse_input_identifier_list():
         identifiers = [parse_identifier()]
         postfix_generator.add_to_postfix(identifiers[-1], 'r-val')
         postfix_generator.add_to_postfix('IN', 'in')
-        cil_generator.read_input(identifiers[-1])
+        cil_generator.read_input(identifiers[-1], get_type_var(identifiers[-1]))
         while check_current_token(','):
             parse_token(',', 'punct')
             identifiers.append(parse_identifier())
             postfix_generator.add_to_postfix(identifiers[-1], 'l-val')
             postfix_generator.add_to_postfix('IN', 'in')
-            cil_generator.read_input(identifiers[-1])
+            cil_generator.read_input(identifiers[-1], get_type_var(identifiers[-1]))
         return identifiers
 
 

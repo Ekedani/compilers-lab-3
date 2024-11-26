@@ -4,7 +4,7 @@ import os
 def map_type_to_cil(var_type):
     type_map = {
         "intnum": "int32",
-        "floatnum": "float32",
+        "floatnum": "float64",
         "bool": "bool"
     }
     return type_map.get(var_type, var_type)
@@ -80,9 +80,13 @@ class CILGenerator:
             '*': 'mul',
             '/': 'div',
             '%': 'rem',
-            '**': 'call System.Math::Pow',
+            '**': 'call float64 [mscorlib]System.Math::Pow(float64, float64)',
         }
         cil_op = op_map.get(op)
+        if op == '**':
+            self.add_to_cil('conv.r8')
+            self.add_to_cil('conv.r8')
+            self.add_to_cil('swap')
         self.add_to_cil(cil_op)
 
     def perform_unary_operation(self, op):
@@ -94,33 +98,51 @@ class CILGenerator:
     def perform_relational_operation(self, op):
         op_map = {
             '==': 'ceq',
-            '!=': 'cne',
+            '!=': ('ceq', 'ldc.i4.0', 'ceq'),
             '<': 'clt',
-            '<=': 'cle',
             '>': 'cgt',
-            '>=': 'cge',
+            '<=': ('cgt', 'ldc.i4.0', 'ceq'),
+            '>=': ('clt', 'ldc.i4.0', 'ceq'),
         }
-        cil_op = op_map.get(op)
-        self.add_to_cil(cil_op)
+        cil_ops = op_map.get(op)
+        if isinstance(cil_ops, tuple):
+            for instruction in cil_ops:
+                self.add_to_cil(instruction)
+        else:
+            self.add_to_cil(cil_ops)
 
-    def read_input(self, var_name):
+    def read_input(self, var_name, var_type):
+        var_type = map_type_to_cil(var_type)
         self.add_to_cil('call', 'string [mscorlib]System.Console::ReadLine()')
-        var_type = self.get_variable_type(var_name)
         if var_type == 'int32':
             self.add_to_cil('call', 'int32 [mscorlib]System.Int32::Parse(string)')
-        elif var_type == 'float32':
-            self.add_to_cil('call', 'float32 [mscorlib]System.Single::Parse(string)')
+        elif var_type == 'float64':
+            self.add_to_cil('call', 'float64 [mscorlib]System.Double::Parse(string)')
         self.add_to_cil('stloc', var_name)
 
-    def write_output(self):
-        self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(string)')
+    def write_output(self, var_type):
+        var_type = map_type_to_cil(var_type)
+        if var_type == 'int32':
+            self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(int32)')
+        elif var_type == 'float64':
+            self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(float64)')
+        elif var_type == 'string':
+            self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(string)')
+        elif var_type == 'bool':
+            self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(bool)')
+        else:
+            self.add_to_cil('callvirt', 'instance string [mscorlib]System.Object::ToString()')
+            self.add_to_cil('call', 'void [mscorlib]System.Console::WriteLine(string)')
 
     def load_constant(self, value, var_type):
         cil_type = map_type_to_cil(var_type)
         if cil_type == 'int32':
-            self.add_to_cil('ldc.i4', value)
-        elif cil_type == 'float32':
-            self.add_to_cil('ldc.r4', value)
+            if -128 <= int(value) <= 127:
+                self.add_to_cil(f'ldc.i4.s {value}')
+            else:
+                self.add_to_cil(f'ldc.i4 {value}')
+        elif cil_type == 'float64':
+            self.add_to_cil(f'ldc.r8 {value}')
         elif cil_type == 'bool':
             val = '1' if value.lower() == 'true' else '0'
             self.add_to_cil('ldc.i4', val)

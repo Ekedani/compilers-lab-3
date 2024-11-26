@@ -8,7 +8,7 @@
    test         intnum         
    index        intnum         
    a            intnum         
-   g            intnum         
+   g            floatnum       
    NONE         bool           
    i            intnum         
    e            bool           
@@ -30,19 +30,19 @@
 )
 
 .constants(
-   37           intnum         
    6            intnum         
-   5            intnum         
-   2            intnum         
-   678          intnum         
-   42           intnum         
-   11           intnum         
-   0            intnum         
-   12           intnum         
-   1            intnum         
+   37           intnum         
    3            intnum         
+   1            intnum         
+   5            intnum         
+   678          intnum         
+   0            intnum         
+   2            intnum         
+   12           intnum         
    123          intnum         
+   42           intnum         
    true         boolval        
+   11           intnum         
 )
 
 .code(

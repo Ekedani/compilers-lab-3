@@ -8,7 +8,7 @@ func main() {
     a := 6;
     scan(a);
     print(a);
-    var g int = ((123 * (2 + 678)) - 11**(2+2));
+    var g float = ((123 * (2 + 678)) - 11**(2+2));
     if a - 2 == 0 {
         print(0, 2, 3);
     } else {
