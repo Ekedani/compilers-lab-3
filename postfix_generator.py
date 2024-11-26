@@ -12,7 +12,7 @@ class PostfixGenerator:
             self.constants.add((element, token_type))
 
     def new_label(self):
-        label = f"m{self.label_count}"
+        label = f"L{self.label_count}"
         self.label_count += 1
         return label
 

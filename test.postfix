@@ -15,34 +15,34 @@
 )
 
 .labels(
-   m0           53             
-   m1           56             
-   m2           66             
-   m4           72             
-   m5           77             
-   m6           83             
-   m7           88             
-   m3           91             
-   m8           95             
-   m9           112            
-   m10          121            
-   m11          136            
+   L0           53             
+   L1           56             
+   L2           66             
+   L4           72             
+   L5           77             
+   L6           83             
+   L7           88             
+   L3           91             
+   L8           95             
+   L9           112            
+   L10          121            
+   L11          136            
 )
 
 .constants(
-   true         boolval        
-   3            intnum         
+   37           intnum         
+   6            intnum         
+   5            intnum         
+   2            intnum         
    678          intnum         
-   12           intnum         
+   42           intnum         
    11           intnum         
    0            intnum         
-   42           intnum         
-   123          intnum         
-   5            intnum         
-   6            intnum         
-   37           intnum         
+   12           intnum         
    1            intnum         
-   2            intnum         
+   3            intnum         
+   123          intnum         
+   true         boolval        
 )
 
 .code(
@@ -89,7 +89,7 @@
    -            add_op         
    0            intnum         
    ==           rel_op         
-   m0           label          
+   L0           label          
    JF           jf             
    0            intnum         
    OUT          out            
@@ -97,55 +97,55 @@
    OUT          out            
    3            intnum         
    OUT          out            
-   m1           label          
+   L1           label          
    JMP          jump           
-   m0           label          
+   L0           label          
    1            intnum         
    OUT          out            
-   m1           label          
+   L1           label          
    a            r-val          
    2            intnum         
    %            mult_op        
    0            intnum         
    ==           rel_op         
-   m2           label          
+   L2           label          
    JF           jf             
    12           intnum         
    OUT          out            
-   m2           label          
+   L2           label          
    a            r-val          
    1            intnum         
    ==           rel_op         
-   m5           label          
+   L5           label          
    JF           jf             
-   m4           label          
+   L4           label          
    1            intnum         
    OUT          out            
-   m3           label          
+   L3           label          
    JMP          jump           
-   m5           label          
+   L5           label          
    a            r-val          
    2            intnum         
    ==           rel_op         
-   m7           label          
+   L7           label          
    JF           jf             
-   m6           label          
+   L6           label          
    2            intnum         
    OUT          out            
-   m3           label          
+   L3           label          
    JMP          jump           
-   m7           label          
+   L7           label          
    3            intnum         
    OUT          out            
-   m3           label          
+   L3           label          
    i            l-val          
    1            intnum         
    =            assign_op      
-   m8           label          
+   L8           label          
    i            r-val          
    42           intnum         
    <            rel_op         
-   m9           label          
+   L9           label          
    JF           jf             
    i            l-val          
    i            r-val          
@@ -156,9 +156,9 @@
    2            intnum         
    **           power_op       
    OUT          out            
-   m8           label          
+   L8           label          
    JMP          jump           
-   m9           label          
+   L9           label          
    i            l-val          
    5            intnum         
    =            assign_op      
@@ -167,11 +167,11 @@
    2            intnum         
    <            rel_op         
    =            assign_op      
-   m10          label          
+   L10          label          
    i            r-val          
    0            intnum         
    >            rel_op         
-   m11          label          
+   L11          label          
    JF           jf             
    i            r-val          
    OUT          out            
@@ -180,7 +180,7 @@
    1            intnum         
    -            add_op         
    =            assign_op      
-   m10          label          
+   L10          label          
    JMP          jump           
-   m11          label          
+   L11          label          
 )

@@ -31,6 +31,119 @@
             bool e
         )
 
+        ldc.i4 5
+        stloc x
+        ldc.i4 37
+        stloc y
+        ldloc x
+        ldloc y
+        add 
+        stloc test
+        ldc.i4 1
+        neg 
+        stloc index
+        ldc.i4 1
+        stloc isActive
+        ldc.i4 6
+        stloc a
+        call string [mscorlib]System.Console::ReadLine()
+        stloc a
+        call string [mscorlib]System.Console::ReadLine()
+        stloc a
+        ldloc a
+        call void [mscorlib]System.Console::WriteLine(string)
+        ldc.i4 123
+        ldc.i4 2
+        ldc.i4 678
+        add 
+        mul 
+        ldc.i4 11
+        ldc.i4 2
+        ldc.i4 2
+        add 
+        call System.Math::Pow 
+        sub 
+        stloc g
+        ldloc a
+        ldc.i4 2
+        sub 
+        ldc.i4 0
+        ceq 
+        brfalse L0
+        ldc.i4 0
+        call void [mscorlib]System.Console::WriteLine(string)
+        ldc.i4 2
+        call void [mscorlib]System.Console::WriteLine(string)
+        ldc.i4 3
+        call void [mscorlib]System.Console::WriteLine(string)
+        br L1
+    L0:
+        ldc.i4 1
+        call void [mscorlib]System.Console::WriteLine(string)
+    L1:
+        ldloc a
+        ldc.i4 2
+        rem 
+        ldc.i4 0
+        ceq 
+        brfalse L2
+        ldc.i4 12
+        call void [mscorlib]System.Console::WriteLine(string)
+    L2:
+        ldloc a
+        ldc.i4 1
+        brfalse L5
+    L4:
+        ldc.i4 1
+        call void [mscorlib]System.Console::WriteLine(string)
+        br L3
+    L5:
+        ldc.i4 2
+        brfalse L7
+    L6:
+        ldc.i4 2
+        call void [mscorlib]System.Console::WriteLine(string)
+        br L3
+    L7:
+        ldc.i4 3
+        call void [mscorlib]System.Console::WriteLine(string)
+    L3:
+        ldc.i4 1
+        stloc i
+    L8:
+        ldloc i
+        ldc.i4 42
+        clt 
+        brfalse L9
+        ldloc i
+        ldc.i4 1
+        add 
+        stloc i
+        ldloc i
+        ldc.i4 2
+        call System.Math::Pow 
+        call void [mscorlib]System.Console::WriteLine(string)
+        br L8
+    L9:
+        ldc.i4 5
+        stloc i
+        ldc.i4 5
+        ldc.i4 2
+        clt 
+        stloc e
+    L10:
+        ldloc i
+        ldc.i4 0
+        cgt 
+        brfalse L11
+        ldloc i
+        call void [mscorlib]System.Console::WriteLine(string)
+        ldloc i
+        ldc.i4 1
+        sub 
+        stloc i
+        br L10
+    L11:
         ret
     }
 }

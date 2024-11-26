@@ -94,6 +94,8 @@ def parse_variable_decl():
             parse_expression()
             postfix_generator.add_to_postfix('=', 'assign_op')
             initialize_variable(ident)
+
+            cil_generator.store_variable(ident)
         parse_token(';', 'punct')
 
 
@@ -112,6 +114,7 @@ def parse_short_variable_decl():
         parse_token(';', 'punct')
         proc_table_of_var(ident, expr_type)
         initialize_variable(ident)
+        cil_generator.store_variable(ident)
 
 
 def parse_const_decl():
@@ -130,6 +133,7 @@ def parse_const_decl():
         initialize_variable(ident)
         postfix_generator.add_to_postfix('=', 'assign_op')
         parse_token(';', 'punct')
+        cil_generator.store_variable(ident)
 
 
 def parse_type_spec():
@@ -217,6 +221,8 @@ def parse_assign():
         if var_type != expr_type and not (var_type == 'floatnum' and expr_type == 'intnum'):
             fail_parse('Несумісні типи при присвоєнні', (ident, var_type, expr_type))
 
+        cil_generator.store_variable(ident)
+
 
 def parse_output_stmt():
     """
@@ -247,6 +253,7 @@ def parse_input_stmt():
 
         for ident in identifiers:
             initialize_variable(ident)
+            cil_generator.read_input(ident)
 
 
 def check_current_token(expected_lexeme):
@@ -268,14 +275,18 @@ def parse_for_stmt():
     with indent_manager():
         label_start = postfix_generator.new_label()
         label_end = postfix_generator.new_label()
+        cil_label_start = cil_generator.new_label()
+        cil_label_end = cil_generator.new_label()
 
         parse_token('for', 'keyword')
         parse_token('(', 'brackets_op')
         parse_short_variable_decl()
 
         postfix_generator.add_label(label_start)
+        cil_generator.add_label(cil_label_start)
         parse_expression()
         postfix_generator.add_conditional_jump(label_end)
+        cil_generator.add_conditional_jump(cil_label_end)
 
         parse_token(';', 'punct')
         id = parse_identifier()
@@ -283,11 +294,14 @@ def parse_for_stmt():
         parse_token('=', 'assign_op')
         parse_arithm_expression()
         postfix_generator.add_to_postfix('=', 'assign_op')
+        cil_generator.store_variable(id)
         parse_token(')', 'brackets_op')
         parse_do_block()
 
         postfix_generator.add_unconditional_jump(label_start)
+        cil_generator.add_unconditional_jump(cil_label_start)
         postfix_generator.add_label(label_end)
+        cil_generator.add_label(cil_label_end)
 
 
 def parse_while_stmt():
@@ -299,16 +313,22 @@ def parse_while_stmt():
     with indent_manager():
         label_start = postfix_generator.new_label()
         label_end = postfix_generator.new_label()
+        cil_label_start = cil_generator.new_label()
+        cil_label_end = cil_generator.new_label()
 
         postfix_generator.add_label(label_start)
+        cil_generator.add_label(cil_label_start)
         parse_token('while', 'keyword')
         parse_expression()
 
         postfix_generator.add_conditional_jump(label_end)
+        cil_generator.add_conditional_jump(cil_label_end)
         parse_do_block()
 
         postfix_generator.add_unconditional_jump(label_start)
+        cil_generator.add_unconditional_jump(cil_label_start)
         postfix_generator.add_label(label_end)
+        cil_generator.add_label(cil_label_end)
 
 
 def parse_if_stmt():
@@ -321,18 +341,26 @@ def parse_if_stmt():
         parse_token('if', 'keyword')
         parse_expression()
         label_else = postfix_generator.new_label()
+        cil_label_else = cil_generator.new_label()
 
         postfix_generator.add_conditional_jump(label_else)
+        cil_generator.add_conditional_jump(cil_label_else)
         parse_do_block()
         if check_current_token('else'):
             label_end = postfix_generator.new_label()
             postfix_generator.add_unconditional_jump(label_end)  # Перехід після блоку if
+            cil_label_end = cil_generator.new_label()
+            cil_generator.add_unconditional_jump(cil_label_end)
             postfix_generator.add_label(label_else)
+            cil_generator.add_label(cil_label_else)
+
             parse_token('else', 'keyword')
             parse_do_block()
             postfix_generator.add_label(label_end)
+            cil_generator.add_label(cil_label_end)
         else:
             postfix_generator.add_label(label_else)
+            cil_generator.add_label(cil_label_else)
 
 
 def parse_switch_stmt():
@@ -351,19 +379,22 @@ def parse_switch_stmt():
 
         case_labels = []
         end_label = postfix_generator.new_label()
+        cil_end_label = cil_generator.new_label()
         with indent_manager():
             while check_current_token('case'):
                 case_label = postfix_generator.new_label()
-                case_labels.append(case_label)
+                cil_case_label = cil_generator.new_label()
+                case_labels.append((case_label, cil_case_label))
 
-                parse_case_clause(case_label, end_label, comparison_var)
+                parse_case_clause(case_label, end_label, comparison_var, cil_case_label, cil_end_label)
             if check_current_token('default'):
                 parse_default_clause()
         postfix_generator.add_label(end_label)
+        cil_generator.add_label(cil_end_label)
         parse_token('}', 'block_op')
 
 
-def parse_case_clause(case_label, end_label, comparison_var):
+def parse_case_clause(case_label, end_label, comparison_var, cil_case_label, cil_end_label):
     """
     CaseClause = 'case' Const ':' DoBlock
     """
@@ -376,16 +407,21 @@ def parse_case_clause(case_label, end_label, comparison_var):
 
         postfix_generator.add_to_postfix('==', 'rel_op')
         next_case_label = postfix_generator.new_label()
+        cil_next_case_label = cil_generator.new_label()
         postfix_generator.add_conditional_jump(next_case_label)
+        cil_generator.add_conditional_jump(cil_next_case_label)
 
         postfix_generator.add_label(case_label)
+        cil_generator.add_label(cil_case_label)
 
         parse_token(':', 'punct')
         parse_do_block()
 
         postfix_generator.add_unconditional_jump(end_label)
+        cil_generator.add_unconditional_jump(cil_end_label)
 
         postfix_generator.add_label(next_case_label)
+        cil_generator.add_label(cil_next_case_label)
 
 
 def parse_default_clause():
@@ -419,10 +455,12 @@ def parse_output_expression_list():
     with indent_manager():
         parse_expression()
         postfix_generator.add_to_postfix('OUT', 'out')
+        cil_generator.write_output()
         while check_current_token(','):
             parse_token(',', 'punct')
             parse_expression()
             postfix_generator.add_to_postfix('OUT', 'out')
+            cil_generator.write_output()
 
 
 def parse_input_identifier_list():
@@ -431,11 +469,13 @@ def parse_input_identifier_list():
         identifiers = [parse_identifier()]
         postfix_generator.add_to_postfix(identifiers[-1], 'r-val')
         postfix_generator.add_to_postfix('IN', 'in')
+        cil_generator.read_input(identifiers[-1])
         while check_current_token(','):
             parse_token(',', 'punct')
             identifiers.append(parse_identifier())
             postfix_generator.add_to_postfix(identifiers[-1], 'l-val')
             postfix_generator.add_to_postfix('IN', 'in')
+            cil_generator.read_input(identifiers[-1])
         return identifiers
 
 
@@ -453,10 +493,11 @@ def parse_expression():
             parse_token(lexeme, 'rel_op')
             right_type = parse_arithm_expression()
             postfix_generator.add_to_postfix(lexeme, 'rel_op')
+            cil_generator.perform_relational_operation(lexeme)
 
             # Перевірка типів операндів реляційного оператора
             if left_type not in ('int', 'float', 'intnum', 'floatnum') or right_type not in (
-            'int', 'float', 'intnum', 'floatnum'):
+                    'int', 'float', 'intnum', 'floatnum'):
                 fail_parse('Невірні типи операндів для реляційного оператора', (left_type, lexeme, right_type))
 
             # Результат реляційного виразу завжди 'bool'
@@ -479,6 +520,7 @@ def parse_arithm_expression():
             term_type = parse_term()
 
             postfix_generator.add_to_postfix(lexeme, 'unary_op')
+            cil_generator.perform_unary_operation(lexeme)
 
             if term_type not in ('int', 'float', 'intnum', 'floatnum'):
                 fail_parse('Невірний тип операнда для унарного оператора', (lexeme, term_type))
@@ -493,6 +535,7 @@ def parse_arithm_expression():
                 parse_token(lexeme, tok)
                 term_type = parse_term()
                 postfix_generator.add_to_postfix(lexeme, 'add_op')
+                cil_generator.perform_operation(lexeme)
                 result_type = get_type_op(expr_type, lexeme, term_type)
                 if result_type == 'type_error':
                     fail_parse('Несумісні типи в арифметичній операції', (expr_type, lexeme, term_type))
@@ -518,6 +561,7 @@ def parse_term():
                 parse_token(lexeme, tok)
                 factor_type = parse_factor()
                 postfix_generator.add_to_postfix(lexeme, 'mult_op')
+                cil_generator.perform_operation(lexeme)
                 result_type = get_type_op(term_type, lexeme, factor_type)
                 if result_type == 'type_error':
                     fail_parse('Несумісні типи в множенні/діленні', (term_type, lexeme, factor_type))
@@ -541,6 +585,7 @@ def parse_factor():
             parse_token(lexeme, tok)
             primary_type = parse_factor()
             postfix_generator.add_to_postfix(lexeme, 'power_op')
+            cil_generator.perform_operation(lexeme)
             result_type = get_type_op(factor_type, lexeme, primary_type)
             if result_type == 'type_error':
                 fail_parse('Несумісні типи в операції піднесення до степеня', (factor_type, lexeme, primary_type))
@@ -559,16 +604,19 @@ def parse_primary():
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
             postfix_generator.add_to_postfix(lexeme, tok)
+            cil_generator.load_constant(lexeme, tok)
             return tok
         elif tok == 'boolval':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
             postfix_generator.add_to_postfix(lexeme, tok)
+            cil_generator.load_constant(lexeme, 'bool')
             return 'bool'
         elif tok == 'id':
             print(f"{get_indent()}в рядку {num_line} - токен ({lexeme}, {tok})")
             parse_token(lexeme, tok)
             postfix_generator.add_to_postfix(lexeme, 'r-val')
+            cil_generator.load_variable(lexeme)
             is_init_var(lexeme)
             return get_type_var(lexeme)
         elif lexeme == '(' and tok == 'brackets_op':
