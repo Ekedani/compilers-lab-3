@@ -378,6 +378,7 @@ def parse_switch_stmt():
         parse_expression()
         comparison_var = postfix_generator.get_postfix_code()[-1][0]
 
+        postfix_generator.add_to_postfix(comparison_var, 'r-val')
         parse_token('{', 'block_op')
 
         case_labels = []
@@ -392,6 +393,7 @@ def parse_switch_stmt():
                 parse_case_clause(case_label, end_label, comparison_var, cil_case_label, cil_end_label)
             if check_current_token('default'):
                 parse_default_clause()
+
         postfix_generator.add_label(end_label)
         cil_generator.add_label(cil_end_label)
         parse_token('}', 'block_op')
@@ -406,11 +408,17 @@ def parse_case_clause(case_label, end_label, comparison_var, cil_case_label, cil
         parse_token('case', 'keyword')
         if postfix_generator.get_postfix_code()[-1][0] != comparison_var:
             postfix_generator.add_to_postfix(comparison_var, 'r-val')
+        if comparison_var not in cil_generator.get_top():
+            cil_generator.load_variable(comparison_var)
+
         parse_expression()
 
         postfix_generator.add_to_postfix('==', 'rel_op')
+        cil_generator.perform_relational_operation('==')
+
         next_case_label = postfix_generator.new_label()
         cil_next_case_label = cil_generator.new_label()
+
         postfix_generator.add_conditional_jump(next_case_label)
         cil_generator.add_conditional_jump(cil_next_case_label)
 

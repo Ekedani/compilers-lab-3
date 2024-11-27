@@ -166,3 +166,6 @@ class CILGenerator:
 
     def insert_conversion_to_float_at(self, position):
         self.insert_instruction_at(position, 'conv.r8')
+
+    def get_top(self):
+        return self.cil_code[-1]

@@ -19,11 +19,11 @@ func main() {
     if (a % 2 == 0) print(12);
     switch a {
         case 1:
-            print(1);
+            print(333);
         case 2:
-            print(2);
+            print(666);
         default:
-            print(3);
+            print(777);
     }
     for (i := 1; i < 42; i = i + 1) {
         print(i**2);

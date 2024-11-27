@@ -108,20 +108,23 @@
     L2:
         ldloc a
         ldc.i4 1 
+        ceq 
         brfalse L5
     L4:
-        ldc.i4 1 
+        ldc.i4 333 
         call void [mscorlib]System.Console::WriteLine(int32)
         br L3
     L5:
+        ldloc a
         ldc.i4 2 
+        ceq 
         brfalse L7
     L6:
-        ldc.i4 2 
+        ldc.i4 666 
         call void [mscorlib]System.Console::WriteLine(int32)
         br L3
     L7:
-        ldc.i4 3 
+        ldc.i4 777 
         call void [mscorlib]System.Console::WriteLine(int32)
     L3:
         ldc.i4 1 
