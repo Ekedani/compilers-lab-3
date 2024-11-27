@@ -15,34 +15,40 @@
 )
 
 .labels(
-   L0           55             
-   L1           58             
-   L2           68             
-   L4           74             
-   L5           79             
-   L6           85             
-   L7           90             
-   L3           93             
-   L8           97             
-   L9           114            
-   L10          123            
-   L11          138            
+   L0           59             
+   L1           70             
+   L2           80             
+   L4           86             
+   L5           91             
+   L6           97             
+   L7           102            
+   L3           105            
+   L8           109            
+   L9           126            
+   L10          135            
+   L11          150            
 )
 
 .constants(
-   123          intnum         
-   678          intnum         
-   0            intnum         
-   11           intnum         
-   3            intnum         
-   6            intnum         
-   true         boolval        
-   42           intnum         
-   12           intnum         
-   1            intnum         
    2            intnum         
+   678          intnum         
+   3            intnum         
+   89           intnum         
+   8            intnum         
    5            intnum         
+   123          intnum         
+   12           intnum         
+   11           intnum         
+   34           intnum         
    37           intnum         
+   6            intnum         
+   1            intnum         
+   42           intnum         
+   0            intnum         
+   21           intnum         
+   true         boolval        
+   13           intnum         
+   55           intnum         
 )
 
 .code(
@@ -93,16 +99,28 @@
    ==           rel_op         
    L0           label          
    JF           jf             
-   0            intnum         
+   1            intnum         
    OUT          out            
    2            intnum         
    OUT          out            
    3            intnum         
    OUT          out            
+   5            intnum         
+   OUT          out            
+   8            intnum         
+   OUT          out            
    L1           label          
    JMP          jump           
    L0           label          
-   1            intnum         
+   13           intnum         
+   OUT          out            
+   21           intnum         
+   OUT          out            
+   34           intnum         
+   OUT          out            
+   55           intnum         
+   OUT          out            
+   89           intnum         
    OUT          out            
    L1           label          
    a            r-val          

@@ -11,9 +11,9 @@ func main() {
     var g float = ((123 * (2 + 678)) - 11**(2+2));
     print(g);
     if a - 2 == 0 {
-        print(0, 2, 3);
+        print(1, 2, 3, 5, 8);
     } else {
-        print(1);
+        print(13, 21, 34, 55, 89);
     }
     var NONE bool;
     if (a % 2 == 0) print(12);

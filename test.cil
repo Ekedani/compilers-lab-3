@@ -74,15 +74,27 @@
         ldc.i4 0 
         ceq 
         brfalse L0
-        ldc.i4 0 
+        ldc.i4 1 
         call void [mscorlib]System.Console::WriteLine(int32)
         ldc.i4 2 
         call void [mscorlib]System.Console::WriteLine(int32)
         ldc.i4 3 
         call void [mscorlib]System.Console::WriteLine(int32)
+        ldc.i4 5 
+        call void [mscorlib]System.Console::WriteLine(int32)
+        ldc.i4 8 
+        call void [mscorlib]System.Console::WriteLine(int32)
         br L1
     L0:
-        ldc.i4 1 
+        ldc.i4 13 
+        call void [mscorlib]System.Console::WriteLine(int32)
+        ldc.i4 21 
+        call void [mscorlib]System.Console::WriteLine(int32)
+        ldc.i4 34 
+        call void [mscorlib]System.Console::WriteLine(int32)
+        ldc.i4 55 
+        call void [mscorlib]System.Console::WriteLine(int32)
+        ldc.i4 89 
         call void [mscorlib]System.Console::WriteLine(int32)
     L1:
         ldloc a

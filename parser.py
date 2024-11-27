@@ -220,6 +220,9 @@ def parse_assign():
         if var_type != expr_type and not (var_type == 'floatnum' and expr_type == 'intnum'):
             fail_parse('Несумісні типи при присвоєнні', (ident, var_type, expr_type))
 
+        if var_type == 'floatnum' and expr_type == 'intnum':
+            cil_generator.add_conversion_to_float()
+
         cil_generator.store_variable(ident)
 
 
